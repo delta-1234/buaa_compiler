@@ -1,7 +1,9 @@
+package Lexer;
+
 import java.util.Scanner;
 
 public class Lexer {
-    private String [] reserveWords = {"main", "const", "int", "break",
+    private String[] reserveWords = {"main", "const", "int", "break",
         "continue", "if", "else", "for", "getint", "printf", "return", "void"};
     private LexType[] lexTypes = LexType.values();
     private Scanner sc;
@@ -11,6 +13,7 @@ public class Lexer {
     private int lineNum;
     private int curPos;
     private int state;
+    private static Lexer lexer = null;
 
     public Lexer(Scanner sc) {
         this.sc = sc;
@@ -21,9 +24,16 @@ public class Lexer {
         state = 0;
         source = new StringBuilder();
         while (sc.hasNext()) {
-             source.append(sc.nextLine());
-             source.append('\n');
+            source.append(sc.nextLine());
+            source.append('\n');
         }
+        sc.close();
+        lexer = this;
+        next(); // 创建时预读一个单词
+    }
+
+    public static Lexer getInstance() {
+        return lexer;
     }
 
     public boolean next() {
@@ -263,5 +273,38 @@ public class Lexer {
                 return LexType.RBRACE;
             }
         }
+    }
+
+    public LexType getNextWord(int num) {
+        StringBuilder token = new StringBuilder(this.token);
+        LexType lexType = this.lexType;
+        int lineNum = this.lineNum;
+        int curPos = this.curPos;
+        int state = this.state;
+        for (int i = 0; i < num; i++) {
+            next();
+        }
+        LexType tmp = getLexType();
+        this.token = token;
+        this.lexType = lexType;
+        this.lineNum = lineNum;
+        this.curPos = curPos;
+        this.state = state;
+        return tmp;
+    }
+
+    public boolean isLVal() {
+        int i = curPos;
+        boolean flag = false;
+        while (i < source.length()) {
+            if (source.charAt(i) == ';') {
+                break;
+            } else if (source.charAt(i) == '=') {
+                flag = true;
+                break;
+            }
+            i++;
+        }
+        return flag;
     }
 }
