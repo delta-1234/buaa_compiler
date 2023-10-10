@@ -34,6 +34,10 @@ public class LVal {
         }
     }
 
+    public Ident getIdent() {
+        return ident;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

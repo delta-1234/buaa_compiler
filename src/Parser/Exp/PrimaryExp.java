@@ -33,6 +33,10 @@ public class PrimaryExp {
         }
     }
 
+    public void parse(LVal lVal) {
+        this.lVal = lVal;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

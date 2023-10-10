@@ -5,6 +5,7 @@ int ident = 1;
 int n2[2] = {0,1},double_n2[2][2]={{1,2},{3,4}};
 int func() {
     global_var = global_var + 1;
+    a+1 a=1;
     return 1;
 }
 void func1(){}

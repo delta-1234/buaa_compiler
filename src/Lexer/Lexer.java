@@ -292,19 +292,4 @@ public class Lexer {
         this.state = state;
         return tmp;
     }
-
-    public boolean isLVal() {
-        int i = curPos;
-        boolean flag = false;
-        while (i < source.length()) {
-            if (source.charAt(i) == ';') {
-                break;
-            } else if (source.charAt(i) == '=') {
-                flag = true;
-                break;
-            }
-            i++;
-        }
-        return flag;
-    }
 }

@@ -3,6 +3,7 @@ package Parser.Exp;
 import Lexer.*;
 import Parser.FuncDef.FuncRParams;
 import Parser.Ident;
+import Parser.Stmt.LVal;
 
 public class UnaryExp {
     private PrimaryExp primaryExp;
@@ -46,6 +47,25 @@ public class UnaryExp {
         } else {
             primaryExp = new PrimaryExp();
             primaryExp.parse();
+        }
+    }
+
+    public void parse(LVal lVal) {
+        if (Lexer.getInstance().getLexType() == LexType.LPARENT) {
+            ident = lVal.getIdent();
+            Lexer.getInstance().next();
+            if (Lexer.getInstance().getLexType() != LexType.RPARENT) {
+                funcRParams = new FuncRParams();
+                funcRParams.parse();
+            }
+            if (Lexer.getInstance().getLexType() != LexType.RPARENT) {
+                System.out.println("UnaryExp error)");
+                return; //error
+            }
+            Lexer.getInstance().next();
+        } else {
+            primaryExp = new PrimaryExp();
+            primaryExp.parse(lVal);
         }
     }
 

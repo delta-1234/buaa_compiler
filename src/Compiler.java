@@ -14,7 +14,7 @@ public class Compiler {
             String outputFilePath = "output.txt";
             FileWriter fileWriter = new FileWriter(outputFilePath, false);
             PrintWriter printWriter = new PrintWriter(fileWriter);
-            new Lexer(scanner);
+            Lexer lexer = new Lexer(scanner);
             CompUnit compUnit = new CompUnit();
             compUnit.parse();
             printWriter.print(compUnit);

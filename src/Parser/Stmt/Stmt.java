@@ -40,12 +40,20 @@ public class Stmt {
     | 'printf''('FormatString{','Exp}')'';'                 (10)
      */
     public void parse() {
-        if (Lexer.getInstance().getLexType() == LexType.IDENFR && Lexer.getInstance().isLVal()) {
+        if (Lexer.getInstance().getLexType() == LexType.IDENFR) {
             lVal = new LVal();
             lVal.parse();
             if (Lexer.getInstance().getLexType() != LexType.ASSIGN) {
-                System.out.println("Stmt error=");
-                return; //error
+                num = 2;
+                Exp exp = new Exp();
+                exp.parse(lVal);
+                exps.add(exp);
+                if (Lexer.getInstance().getLexType() != LexType.SEMICN) {
+                    System.out.println("Stmt error;");
+                    return; //error
+                }
+                Lexer.getInstance().next();
+                return;
             }
             Lexer.getInstance().next();
             if (Lexer.getInstance().getLexType() == LexType.GETINTTK) {

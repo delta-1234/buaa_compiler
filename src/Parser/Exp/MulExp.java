@@ -2,6 +2,7 @@ package Parser.Exp;
 
 import Lexer.LexType;
 import Lexer.Lexer;
+import Parser.Stmt.LVal;
 
 import java.util.ArrayList;
 
@@ -17,6 +18,27 @@ public class MulExp {
     public void parse() {
         UnaryExp unaryExp = new UnaryExp();
         unaryExp.parse();
+        unaryExps.add(unaryExp);
+        while (true) {
+            if (Lexer.getInstance().getLexType() == LexType.MULT) {
+                op.add(1);
+            } else if (Lexer.getInstance().getLexType() == LexType.MOD) {
+                op.add(2);
+            } else if (Lexer.getInstance().getLexType() == LexType.DIV) {
+                op.add(3);
+            } else {
+                break;
+            }
+            Lexer.getInstance().next();
+            UnaryExp tmp = new UnaryExp();
+            tmp.parse();
+            unaryExps.add(tmp);
+        }
+    }
+
+    public void parse(LVal lVal) {
+        UnaryExp unaryExp = new UnaryExp();
+        unaryExp.parse(lVal);
         unaryExps.add(unaryExp);
         while (true) {
             if (Lexer.getInstance().getLexType() == LexType.MULT) {
