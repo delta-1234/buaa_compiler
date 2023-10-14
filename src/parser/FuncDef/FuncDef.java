@@ -28,13 +28,14 @@ public class FuncDef {
         funcType.parse();
         ident = new Ident();
         ident.parse();
-        Function function = (Function) SymbolTable.search(ident.getName(), true, false);
-        if (function != null) {
+        Symbol symbol = SymbolTable.search(ident.getName(), true, false);
+        if (symbol != null) {
             Error.error('b', Lexer.getInstance().getLineNum());
-            function = null;
+            symbol = null;
         } else {
-            function = new Function(SymbolTable.curId, ident.getName(), funcType.reType());
+            symbol = new Function(SymbolTable.curId, ident.getName(), funcType.reType());
         }
+        Function function = (Function) symbol;
         Lexer.getInstance().next();
         if (FuncFParams.firstSet().contains(Lexer.getInstance().getLexType())) {
             funcFParams = new FuncFParams();
