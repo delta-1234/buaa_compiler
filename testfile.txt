@@ -1,7 +1,12 @@
 int a;
-int a(){
+void b() {
+{return 1;}
+}
 
-
+int c(){
+{
+return;
+}
 }
 int main(){
 return;

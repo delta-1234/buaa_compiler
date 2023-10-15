@@ -17,7 +17,11 @@ public class SymbolTable {
         this.id = id;
         this.fatherId = fatherId;
         directory = new HashMap<>();
-        funcName = "";
+        if (fatherId != -1 && !generalTable.get(fatherId).funcName.equals("")) {
+            funcName = generalTable.get(fatherId).funcName;
+        } else {
+            funcName = "";
+        }
         if (fatherId != -1 && generalTable.get(fatherId).isFor) {
             isFor = true;
         } else {

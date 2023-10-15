@@ -200,7 +200,8 @@ public class Stmt {
         } else if (Lexer.getInstance().getLexType() == LexType.RETURNTK) {
             num = 8;
             Lexer.getInstance().next();
-            Function func = ((Function) SymbolTable.getCurrentTable().getFatherFunc());
+            Function func = ((Function) SymbolTable.search(SymbolTable.getCurrentTable().funcName,
+                false, false));
             if (func != null && func.retype == 0) {
                 if (Lexer.getInstance().getLexType() != LexType.SEMICN) {
                     Error.error('f', Lexer.getInstance().getLineNum());
