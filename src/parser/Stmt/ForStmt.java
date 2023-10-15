@@ -1,7 +1,10 @@
 package parser.Stmt;
 
+import errorHandle.Error;
 import lexer.*;
 import parser.Exp.Exp;
+import symbolTable.SymbolTable;
+import symbolTable.Variate;
 
 public class ForStmt {
     private LVal lVal;
@@ -15,6 +18,10 @@ public class ForStmt {
     public void parse() {
         lVal = new LVal();
         lVal.parse();
+        Variate variate = (Variate) SymbolTable.search(lVal.getIdent().getName(), false, true);
+        if (variate != null && variate.con) {
+            Error.error('h', Lexer.getInstance().getLineNum());
+        }
         Lexer.getInstance().next();
         exp = new Exp();
         exp.parse();

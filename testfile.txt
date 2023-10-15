@@ -1,13 +1,5 @@
-int a;
-void b() {
-{return 1;}
-}
-
-int c(){
-{
-return;
-}
-}
 int main(){
-return;
+const int a = 1;
+for(a=1;;){}
+return 1;
 }
