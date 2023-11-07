@@ -1,6 +1,6 @@
 package errorHandle;
 
-import lexer.Lexer;
+import front.lexer.Lexer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
