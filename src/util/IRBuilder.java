@@ -92,17 +92,17 @@ public class IRBuilder {
             GlobalVariable gv =
                 new GlobalVariable(constDef.getIdent(), new PointerType(integerType), constInt,
                     true);
-            module.addGlobalVar(gv);
+            //module.addGlobalVar(gv);
             module.getSymbolTable().addSymbol(gv);
         } else {
             AllocaIns allocaIns =
                 new AllocaIns(constDef.getIdent(), new PointerType(integerType), BB,
                     Operation.ALLOCA, true);
-            BB.addIns(allocaIns);
+            //BB.addIns(allocaIns);
             module.getSymbolTable().addSymbol(allocaIns);
-            StoreIns storeIns = new StoreIns("", null, BB, Operation.STORE, constInt, allocaIns);
+            //StoreIns storeIns = new StoreIns("", null, BB, Operation.STORE, constInt, allocaIns);
             allocaIns.putValue(0, constInt);
-            BB.addIns(storeIns);
+            //BB.addIns(storeIns);
         }
     }
 
