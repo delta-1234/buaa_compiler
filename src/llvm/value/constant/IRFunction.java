@@ -4,24 +4,28 @@ import llvm.type.FunctionType;
 import llvm.type.Type;
 import llvm.type.VoidType;
 import llvm.value.BasicBlock;
+import llvm.value.Value;
 import llvm.value.instruction.BrIns;
 import llvm.value.instruction.Instruction;
 import llvm.value.instruction.Operation;
 import llvm.value.instruction.RetIns;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 
 public class IRFunction extends GlobalValue {
     private ArrayList<BasicBlock> basicBlocks;
     private FunctionType functionType;
+    private HashMap<Value, HashSet<Value>> clashGraph;
 
     public IRFunction(String name, Type type) {
         super(name, type);
         setIdent("@" + name);
         functionType = (FunctionType) type;
         basicBlocks = new ArrayList<>();
+        clashGraph = new HashMap<>();
     }
 
     public BasicBlock getBB(int i) { //超出index返回null
@@ -89,15 +93,13 @@ public class IRFunction extends GlobalValue {
                     hasFather.add(brIns.getFalseBB());
                     BasicBlock trueBB = brIns.getTrueBB();
                     BasicBlock falseBB = brIns.getFalseBB();
-                    if (trueBB.getInstructions().size() != 1) {
-                        continue;
-                    }
-                    if (!(trueBB.getLastIns() instanceof BrIns)) {
-                        continue;
-                    }
-                    BasicBlock temp = ((BrIns) trueBB.getLastIns()).getDest();
-                    if (temp != null) {
-                        brIns.setTrueBB(temp);
+                    BasicBlock temp;
+                    if (trueBB.getInstructions().size() == 1 &&
+                        trueBB.getLastIns() instanceof BrIns) {
+                        temp = ((BrIns) trueBB.getLastIns()).getDest();
+                        if (temp != null) {
+                            brIns.setTrueBB(temp);
+                        }
                     }
                     if (falseBB.getInstructions().size() != 1) {
                         continue;
@@ -129,6 +131,102 @@ public class IRFunction extends GlobalValue {
         }
     }
 
+    public void buildClashGraph() {
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            basicBlocks.get(i).calUseDef();
+        }
+        HashMap<BasicBlock, Integer> BBtoNum = new HashMap<>();
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            if (basicBlocks.get(i).getLastIns() instanceof BrIns brIns) {
+                if (brIns.getDest() != null) {
+                    basicBlocks.get(i).getSucceed().add(brIns.getDest());
+                } else {
+                    basicBlocks.get(i).getSucceed().add(brIns.getTrueBB());
+                    basicBlocks.get(i).getSucceed().add(brIns.getFalseBB());
+                }
+            }
+            BBtoNum.put(basicBlocks.get(i), i);
+        }
+        ArrayList<HashSet<Value>> inSet = new ArrayList<>();
+        ArrayList<HashSet<Value>> lastInSet = new ArrayList<>();
+        ArrayList<HashSet<Value>> outSet = new ArrayList<>();
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            inSet.add(new HashSet<>());
+            lastInSet.add(new HashSet<>());
+            outSet.add(new HashSet<>());
+        }
+        HashMap<Value, HashSet<Integer>> valueToBB = new HashMap<>();
+        while (true) {
+            for (int i = basicBlocks.size() - 1; i >= 0; i--) {
+                outSet.get(i).clear();
+                for (BasicBlock succeed : basicBlocks.get(i).getSucceed()) {
+                    outSet.get(i).addAll(inSet.get(BBtoNum.get(succeed)));
+                }
+                inSet.get(i).clear();
+                inSet.get(i).addAll(basicBlocks.get(i).getUseValue());
+                for (Value value : outSet.get(i)) {
+                    if (!basicBlocks.get(i).getDefValue().contains(value)) {
+                        inSet.get(i).add(value);
+                    }
+                }
+            }
+            if (lastInSet.equals(inSet)) {
+                break;
+            }
+            lastInSet.clear();
+            valueToBB.clear();
+            for (int i = 0; i < inSet.size(); i++) {
+                lastInSet.add(new HashSet<>());
+                for (Value v : inSet.get(i)) {
+                    lastInSet.get(i).add(v);
+                    if (!valueToBB.containsKey(v)) {
+                        valueToBB.put(v, new HashSet<>());
+                    }
+                    valueToBB.get(v).add(i);
+                }
+            }
+        }
+        for (int i = 0; i < inSet.size(); i++) {
+            for (Value v1 : inSet.get(i)) {
+//                basicBlocks.get(i).getActivateVar().add(v1);
+//                if (valueToBB.get(v1).size() < 2) {
+//                    continue;
+//                }
+//                if (!clashGraph.containsKey(v1)) {
+//                    clashGraph.put(v1, new HashSet<>());
+//                }
+//                for (Value v2 : basicBlocks.get(i).getDefValue()) {
+//                    if (!valueToBB.containsKey(v2) || valueToBB.get(v2).size() < 2 ||
+//                        v1.equals(v2)) {
+//                        continue;
+//                    }
+//                    if (!clashGraph.containsKey(v1)) {
+//                        clashGraph.put(v1, new HashSet<>());
+//                    }
+//                    if (!clashGraph.containsKey(v2)) {
+//                        clashGraph.put(v2, new HashSet<>());
+//                    }
+//                    clashGraph.get(v1).add(v2);
+//                    clashGraph.get(v2).add(v1);
+//                }
+                for (Value v2 : inSet.get(i)) {
+                    if (!valueToBB.containsKey(v2) || valueToBB.get(v2).size() < 2 ||
+                        v1.equals(v2)) {
+                        continue;
+                    }
+                    if (!clashGraph.containsKey(v1)) {
+                        clashGraph.put(v1, new HashSet<>());
+                    }
+                    if (!clashGraph.containsKey(v2)) {
+                        clashGraph.put(v2, new HashSet<>());
+                    }
+                    clashGraph.get(v1).add(v2);
+                    clashGraph.get(v2).add(v1);
+                }
+            }
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -153,5 +251,21 @@ public class IRFunction extends GlobalValue {
         }
         sb.append("}\n");
         return sb.toString();
+    }
+
+    public ArrayList<BasicBlock> getBasicBlocks() {
+        return basicBlocks;
+    }
+
+    public int getParamNum() {
+        return functionType.getParamNum();
+    }
+
+    public HashMap<Value, HashSet<Value>> getClashGraph() {
+        return clashGraph;
+    }
+
+    public Type getRetType() {
+        return functionType.getRetType();
     }
 }

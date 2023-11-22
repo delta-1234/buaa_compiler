@@ -2,6 +2,7 @@ package llvm.value;
 
 import llvm.Use;
 import llvm.type.Type;
+import llvm.value.instruction.Instruction;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -27,6 +28,9 @@ public class Value {
     }
 
     public String getName() {
+        if (name.equals("") && ident.charAt(0) == '%') {
+            name = ident.split("%")[1];
+        }
         return name;
     }
 
@@ -57,5 +61,28 @@ public class Value {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getNextUse(BasicBlock BB, int nowLoc) {
+        int min = -1;
+        for (Use use : useList) {
+            if (use.getUser() instanceof Instruction ins &&
+                ins.getParent().equals(BB)) {
+                if (ins.getLocation() < nowLoc) {
+                    continue;
+                }
+                if (min < 0) {
+                    min = ins.getLocation() - nowLoc;
+                    continue;
+                }
+                if (min > ins.getLocation() - nowLoc) {
+                    min = ins.getLocation() - nowLoc;
+                }
+            }
+        }
+        if (min >= 0) {
+            return min;
+        }
+        return -1;
     }
 }

@@ -1,15 +1,7 @@
-
-void logic() {
-    int i = 0,j = 0;
-    if (i==0 && !j) {
-        printf("YeG1\n");
-    }
-
-    return;
-}
-
-int main()
-{
-logic();
-    return 0;
+int main(){
+int a[3] = {1,2,3};
+int b = 0;
+int c = b+3200;
+printf("%d",c);
+return 0;
 }

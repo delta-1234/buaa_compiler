@@ -1,12 +1,9 @@
 package llvm.value.instruction;
 
-import llvm.Use;
-import llvm.type.IntegerType;
 import llvm.type.PointerType;
 import llvm.type.Type;
 import llvm.value.BasicBlock;
 import llvm.value.Value;
-import llvm.value.constant.ConstInt;
 
 import java.util.HashMap;
 
@@ -15,6 +12,7 @@ public class AllocaIns extends Instruction {
     private Type pointType;
     private HashMap<Integer, Value> result;
     private boolean isConst;
+    private boolean isArg;
 
     //<result> = alloca <type>
     public AllocaIns(String name, Type type, BasicBlock basicBlock, Operation op, boolean isConst) {
@@ -24,6 +22,11 @@ public class AllocaIns extends Instruction {
         this.isConst = isConst;
         setIdent("%def" + count);
         count++;
+        if (pointType instanceof PointerType) {
+            isArg = true;
+        } else {
+            isArg = false;
+        }
     }
 
     public Type getDefType() {
@@ -49,5 +52,9 @@ public class AllocaIns extends Instruction {
     @Override
     public String toString() {
         return getIdent() + " = alloca " + pointType + "\n";
+    }
+
+    public boolean isArg() {
+        return isArg;
     }
 }

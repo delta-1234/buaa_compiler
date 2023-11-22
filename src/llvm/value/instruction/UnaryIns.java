@@ -27,7 +27,7 @@ public class UnaryIns extends Instruction{
 
     @Override
     public String toString() {
-        if (op == Operation.ZEXT) {
+        if (getOp() == Operation.ZEXT) {
             return getIdent() + " = zext " + value.getType() + " " + value.getIdent() +
                 " to " + getType() + "\n";
         }

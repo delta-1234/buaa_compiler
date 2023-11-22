@@ -5,8 +5,9 @@ import llvm.value.BasicBlock;
 import llvm.value.User;
 
 public class Instruction extends User {
-    public BasicBlock parent;
-    public Operation op;
+    private BasicBlock parent;
+    private Operation op;
+
     public Instruction(String name, Type type, BasicBlock basicBlock, Operation op) {
         super(name, type);
         this.parent = basicBlock;
@@ -25,5 +26,9 @@ public class Instruction extends User {
 
     public Operation getOp() {
         return op;
+    }
+
+    public int getLocation() {
+        return parent.getInstructions().indexOf(this);
     }
 }

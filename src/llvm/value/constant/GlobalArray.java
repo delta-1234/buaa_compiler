@@ -46,6 +46,10 @@ public class GlobalArray extends GlobalValue {
         unCertain = true;
     }
 
+    public void certain() {
+        unCertain = false;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

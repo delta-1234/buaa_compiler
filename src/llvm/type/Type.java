@@ -4,6 +4,6 @@ public interface Type {
     boolean isInteger();
     boolean isArray();
     boolean isFunction();
-
     boolean isPointer();
+    int getSize();
 }

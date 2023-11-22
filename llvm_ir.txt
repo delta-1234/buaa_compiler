@@ -2,39 +2,22 @@ declare i32 @getint()
 declare void @putint(i32)
 declare void @putch(i32)
 declare void @putstr(i8*)
-define dso_local void @logic(){
-    %def0 = alloca i32
-    store i32 0, i32* %def0
+define dso_local i32 @main(){
+    %def0 = alloca [3 x i32]
+    %get0 = getelementptr [3 x i32], [3 x i32]* %def0, i32 0, i32 0
+    store i32 1, i32* %get0
+    %get1 = getelementptr [3 x i32], [3 x i32]* %def0, i32 0, i32 1
+    store i32 2, i32* %get1
+    %get2 = getelementptr [3 x i32], [3 x i32]* %def0, i32 0, i32 2
+    store i32 3, i32* %get2
     %def1 = alloca i32
     store i32 0, i32* %def1
-    br label %B1
-
-B1:
-    %ld0 = load i32, i32* %def0
-    %cmp0 = icmp eq i32 %ld0, 0
-    br i1 %cmp0, label %B5, label %B4
-
-B5:
-    %ld1 = load i32, i32* %def1
-    %cmp1 = icmp eq i32 %ld1, 0
-    %zot0 = zext i1 %cmp1 to i32
-    %cmp2 = icmp ne i32 %zot0, 0
-    br i1 %cmp2, label %B2, label %B4
-
-B2:
-    call void @putch(i32 89)
-    call void @putch(i32 101)
-    call void @putch(i32 71)
-    call void @putch(i32 49)
-    call void @putch(i32 10)
-    br label %B4
-
-B4:
-    ret void
-}
-
-define dso_local i32 @main(){
-    call void @logic()
+    %def2 = alloca i32
+    %ld0 = load i32, i32* %def1
+    %calc0 = add i32 3200, %ld0
+    store i32 %calc0, i32* %def2
+    %ld1 = load i32, i32* %def2
+    call void @putint(i32 %ld1)
     ret i32 0
 }
 

@@ -60,6 +60,7 @@ public class IRBuilder {
         }
         buildFunc(compUnit.getMainFuncDef());
         module.getSymbolTable().deleteTable();
+        module.setCertain();
     }
 
     public static void buildGlobalVar(Decl decl) {
@@ -313,6 +314,7 @@ public class IRBuilder {
         }
         Parser.parseBlock(funcDef.getBlock(), BB, null, null);
         function.deleteDead();
+        function.buildClashGraph();
         module.getSymbolTable().deleteTable();
     }
 
@@ -327,6 +329,7 @@ public class IRBuilder {
         function.addBB(BB);
         Parser.parseBlock(mainFuncDef.getBlock(), BB, null, null);
         function.deleteDead();
+        function.buildClashGraph();
         module.getSymbolTable().deleteTable();
     }
 

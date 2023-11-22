@@ -31,6 +31,11 @@ public class PointerType implements Type{
     }
 
     @Override
+    public int getSize() {
+        return 4;
+    }
+
+    @Override
     public String toString() {
         if (pointType instanceof PointerType) {
             return pointType + " *";

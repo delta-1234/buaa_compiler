@@ -32,6 +32,11 @@ public class IntegerType implements Type {
     }
 
     @Override
+    public int getSize() {
+        return bit / 8;
+    }
+
+    @Override
     public String toString() {
         return "i" + bit;
     }

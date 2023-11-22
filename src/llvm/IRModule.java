@@ -44,6 +44,15 @@ public class IRModule {
         }
     }
 
+    public void setCertain() {
+        for (int i = 0; i < globalArrays.size(); i++) {
+            globalArrays.get(i).certain();
+        }
+        for (int i = 0; i < globalVars.size(); i++) {
+            globalVars.get(i).certain();
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -59,5 +68,17 @@ public class IRModule {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    public ArrayList<IRFunction> getFunctions() {
+        return functions;
+    }
+
+    public ArrayList<GlobalVariable> getGlobalVars() {
+        return globalVars;
+    }
+
+    public ArrayList<GlobalArray> getGlobalArrays() {
+        return globalArrays;
     }
 }

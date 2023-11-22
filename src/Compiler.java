@@ -1,3 +1,4 @@
+import backend.Mips;
 import errorHandle.Error;
 import front.lexer.Lexer;
 
@@ -14,16 +15,29 @@ public class Compiler {
         try {
             File file = new File("testfile.txt");
             Scanner scanner = new Scanner(file);
-            String outputFilePath = "llvm_ir.txt";
-            FileWriter fileWriter = new FileWriter(outputFilePath, false);
-            PrintWriter printWriter = new PrintWriter(fileWriter);
+            FileWriter llvmFileWriter = new FileWriter("llvm_ir.txt", false);
+            PrintWriter llvmPrintWriter = new PrintWriter(llvmFileWriter);
+            FileWriter mipsFileWriter = new FileWriter("mips.txt", false);
+            PrintWriter mipsPrintWriter = new PrintWriter(mipsFileWriter);
+            FileWriter errorFileWriter = new FileWriter("error.txt", false);
+            PrintWriter errorPrintWriter = new PrintWriter(errorFileWriter);
             Lexer lexer = new Lexer(scanner);
             Parser.compUnit.parse();
             if (Error.getErrorInform().size() == 0) {
                 IRBuilder.buildIR();
+            } else {
+                for (int i = 0; i < Error.getErrorInform().size(); i++) {
+                    errorPrintWriter.println(Error.getErrorInform().get(i));
+                }
+                errorFileWriter.close();
+                return;
             }
-            printWriter.println(IRBuilder.module);
-            printWriter.close();
+            llvmPrintWriter.println(IRBuilder.module);
+            llvmPrintWriter.close();
+            Mips mips = new Mips();
+            mips.build();
+            mipsPrintWriter.println(mips);
+            mipsFileWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

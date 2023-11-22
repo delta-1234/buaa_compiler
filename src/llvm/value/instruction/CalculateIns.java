@@ -32,7 +32,7 @@ public class CalculateIns extends Instruction {
 
     @Override
     public String toString() {
-        return getIdent() + " = " + op.toString().toLowerCase() +
+        return getIdent() + " = " + getOp().toString().toLowerCase() +
             " " + getType() + " " + op1.getIdent() + ", " + op2.getIdent() + "\n";
     }
 }

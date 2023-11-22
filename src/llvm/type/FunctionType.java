@@ -52,6 +52,11 @@ public class FunctionType implements Type {
     }
 
     @Override
+    public int getSize() {
+        return 4;
+    }
+
+    @Override
     public String toString() {
         return "fc";
     }
