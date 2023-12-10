@@ -33,6 +33,7 @@ import java.util.ArrayList;
 public class IRBuilder {
     private static CompUnit compUnit = Parser.compUnit;
     public static IRModule module = new IRModule();
+    public static boolean better = true;
 
     public static void buildIR() {
         buildModule();
@@ -61,6 +62,17 @@ public class IRBuilder {
         buildFunc(compUnit.getMainFuncDef());
         module.getSymbolTable().deleteTable();
         module.setCertain();
+        if (better) {
+            for (IRFunction function : module.getFunctions()) {
+                function.deleteDead();
+                function.buildCFG();
+                function.insertPhi();
+                function.deletePhi();
+                function.calSimplify();
+                function.deleteDead();
+                function.deleteDead();
+            }
+        }
     }
 
     public static void buildGlobalVar(Decl decl) {
@@ -313,8 +325,6 @@ public class IRBuilder {
             BB.addIns(temp);
         }
         Parser.parseBlock(funcDef.getBlock(), BB, null, null);
-        function.deleteDead();
-        function.buildClashGraph();
         module.getSymbolTable().deleteTable();
     }
 
@@ -328,8 +338,6 @@ public class IRBuilder {
         BasicBlock BB = new BasicBlock("", null, function);
         function.addBB(BB);
         Parser.parseBlock(mainFuncDef.getBlock(), BB, null, null);
-        function.deleteDead();
-        function.buildClashGraph();
         module.getSymbolTable().deleteTable();
     }
 

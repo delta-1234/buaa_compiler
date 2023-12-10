@@ -5,7 +5,6 @@ import llvm.type.Type;
 import llvm.value.BasicBlock;
 import llvm.value.User;
 import llvm.value.Value;
-import llvm.value.constant.ConstInt;
 
 public class StoreIns extends Instruction {
     private Value value;
@@ -20,7 +19,8 @@ public class StoreIns extends Instruction {
         this.pointer = pointer;
         setIdent("st" + count);
         count++;
-        Use.getInstance(value, pointer);
+        Use.getInstance(value, this);
+        Use.getInstance(this, pointer);
     }
 
     public Value getValue() {
@@ -36,5 +36,10 @@ public class StoreIns extends Instruction {
     public String toString() {
         return "store " + value.getType() + " " + value.getIdent() + ", " +
             pointer.getType() + " " + pointer.getIdent() + "\n";
+    }
+
+    public void setValue(Value value) {
+        this.value = value;
+        Use.getInstance(value, this);
     }
 }

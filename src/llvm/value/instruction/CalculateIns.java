@@ -35,4 +35,14 @@ public class CalculateIns extends Instruction {
         return getIdent() + " = " + getOp().toString().toLowerCase() +
             " " + getType() + " " + op1.getIdent() + ", " + op2.getIdent() + "\n";
     }
+
+    public void setOp1(Value op1) {
+        this.op1 = op1;
+        Use.getInstance(op1, this);
+    }
+
+    public void setOp2(Value op2) {
+        this.op2 = op2;
+        Use.getInstance(op2, this);
+    }
 }

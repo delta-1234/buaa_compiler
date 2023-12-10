@@ -1,14 +1,27 @@
 package llvm.value.constant;
 
+import llvm.Use;
 import llvm.type.FunctionType;
+import llvm.type.IntegerType;
+import llvm.type.PointerType;
 import llvm.type.Type;
 import llvm.type.VoidType;
 import llvm.value.BasicBlock;
+import llvm.value.User;
 import llvm.value.Value;
+import llvm.value.instruction.AllocaIns;
 import llvm.value.instruction.BrIns;
+import llvm.value.instruction.CalculateIns;
+import llvm.value.instruction.CallIns;
+import llvm.value.instruction.CmpIns;
+import llvm.value.instruction.GetIns;
 import llvm.value.instruction.Instruction;
+import llvm.value.instruction.LoadIns;
 import llvm.value.instruction.Operation;
+import llvm.value.instruction.Phi;
 import llvm.value.instruction.RetIns;
+import llvm.value.instruction.StoreIns;
+import llvm.value.instruction.UnaryIns;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +32,9 @@ public class IRFunction extends GlobalValue {
     private ArrayList<BasicBlock> basicBlocks;
     private FunctionType functionType;
     private HashMap<Value, HashSet<Value>> clashGraph;
+    private HashMap<BasicBlock, HashSet<BasicBlock>> fatherToSon; //控制流程图（Control Flow Graph）
+    private HashMap<BasicBlock, HashSet<BasicBlock>> sonToFather;
+    private HashMap<BasicBlock, HashSet<BasicBlock>> domTree;
 
     public IRFunction(String name, Type type) {
         super(name, type);
@@ -26,6 +42,9 @@ public class IRFunction extends GlobalValue {
         functionType = (FunctionType) type;
         basicBlocks = new ArrayList<>();
         clashGraph = new HashMap<>();
+        fatherToSon = new HashMap<>();
+        sonToFather = new HashMap<>();
+        domTree = new HashMap<>();
     }
 
     public BasicBlock getBB(int i) { //超出index返回null
@@ -55,83 +74,107 @@ public class IRFunction extends GlobalValue {
         for (int i = 0; i < basicBlocks.size(); i++) {
             basicBlocks.get(i).deleteDead();
         }
-        if (getLastBB().getLastIns() == null || !(getLastBB().getLastIns() instanceof RetIns)) {
-            getLastBB().addIns(
-                new RetIns("", new VoidType(), getLastBB(), Operation.RET));
-        }
-        if (basicBlocks.size() == 1) {
-            return;
-        }
-        ArrayList<Integer> rec = new ArrayList<>();
-        for (int k = 0; k < basicBlocks.size(); k++) {
-            HashSet<BasicBlock> hasFather = new HashSet<>();
+        while (true) {
+            boolean flag = true;
             for (int i = 0; i < basicBlocks.size(); i++) {
-                Instruction ins = basicBlocks.get(i).getLastIns();
-                if (!(ins instanceof BrIns brIns)) {
-                    continue;
+                if (basicBlocks.get(i).deleteUseless()) {
+                    flag = false;
                 }
-                if (brIns.getDest() != null) {
-                    hasFather.add(brIns.getDest());
-                    BasicBlock dest = brIns.getDest();
-                    if (dest.getInstructions().size() != 1) {
+            }
+            if (flag) {
+                break;
+            }
+        }
+        if (basicBlocks.size() != 1) {
+            ArrayList<Integer> rec = new ArrayList<>();
+            for (int k = 0; true; k++) {
+                HashSet<BasicBlock> hasFather = new HashSet<>();
+                for (int i = 0; i < basicBlocks.size(); i++) {
+                    Instruction ins = basicBlocks.get(i).getLastIns();
+                    if (!(ins instanceof BrIns brIns)) {
                         continue;
                     }
-                    if (!(dest.getLastIns() instanceof BrIns)) {
-                        continue;
-                    }
-                    BrIns temp = (BrIns) dest.getLastIns();
-                    if (temp.getDest() != null) {
-                        brIns.setDest(temp.getDest());
+                    if (brIns.getDest() != null) {
+                        hasFather.add(brIns.getDest());
+                        BasicBlock dest = brIns.getDest();
+                        if (dest.getInstructions().size() != 1) {
+                            continue;
+                        }
+                        if (!(dest.getLastIns() instanceof BrIns temp)) {
+                            continue;
+                        }
+                        if (temp.getDest() != null) {
+                            brIns.setDest(temp.getDest());
+                        } else {
+                            brIns.setDest(null);
+                            brIns.setTrueBB(temp.getTrueBB());
+                            brIns.setFalseBB(temp.getFalseBB());
+                            brIns.setCond(temp.getCond());
+                        }
                     } else {
-                        brIns.setDest(null);
-                        brIns.setTrueBB(temp.getTrueBB());
-                        brIns.setFalseBB(temp.getFalseBB());
-                        brIns.setCond(temp.getCond());
-                    }
-                } else {
-                    hasFather.add(brIns.getTrueBB());
-                    hasFather.add(brIns.getFalseBB());
-                    BasicBlock trueBB = brIns.getTrueBB();
-                    BasicBlock falseBB = brIns.getFalseBB();
-                    BasicBlock temp;
-                    if (trueBB.getInstructions().size() == 1 &&
-                        trueBB.getLastIns() instanceof BrIns) {
-                        temp = ((BrIns) trueBB.getLastIns()).getDest();
+                        hasFather.add(brIns.getTrueBB());
+                        hasFather.add(brIns.getFalseBB());
+                        BasicBlock trueBB = brIns.getTrueBB();
+                        BasicBlock falseBB = brIns.getFalseBB();
+                        BasicBlock temp;
+                        if (trueBB.equals(falseBB)) {
+                            brIns.setDest(trueBB);
+                            brIns.removeValue();
+                            continue;
+                        }
+                        if (trueBB.getInstructions().size() == 1 &&
+                            trueBB.getLastIns() instanceof BrIns) {
+                            temp = ((BrIns) trueBB.getLastIns()).getDest();
+                            if (temp != null) {
+                                brIns.setTrueBB(temp);
+                            }
+                        }
+                        if (falseBB.getInstructions().size() != 1) {
+                            continue;
+                        }
+                        if (!(falseBB.getLastIns() instanceof BrIns)) {
+                            continue;
+                        }
+                        temp = ((BrIns) falseBB.getLastIns()).getDest();
                         if (temp != null) {
-                            brIns.setTrueBB(temp);
+                            brIns.setFalseBB(temp);
                         }
                     }
-                    if (falseBB.getInstructions().size() != 1) {
-                        continue;
-                    }
-                    if (!(falseBB.getLastIns() instanceof BrIns)) {
-                        continue;
-                    }
-                    temp = ((BrIns) falseBB.getLastIns()).getDest();
-                    if (temp != null) {
-                        brIns.setFalseBB(temp);
+                }
+                for (int i = 1; i < basicBlocks.size(); i++) {
+                    if (!hasFather.contains(basicBlocks.get(i))) {
+                        ArrayList<Instruction> ins = basicBlocks.get(i).getInstructions();
+                        for (int j = 0; j < ins.size(); j++) {
+                            ins.get(j).destroy();
+                        }
+                        basicBlocks.remove(i);
+                        i--;
                     }
                 }
-            }
-            for (int i = 1; i < basicBlocks.size(); i++) {
-                if (!hasFather.contains(basicBlocks.get(i))) {
-                    ArrayList<Instruction> ins = basicBlocks.get(i).getInstructions();
-                    for (int j = 0; j < ins.size(); j++) {
-                        ins.get(j).destroy();
-                    }
-                    basicBlocks.remove(i);
-                    i--;
+                rec.add(basicBlocks.size());
+                if (k > 3 && Objects.equals(rec.get(k - 1), rec.get(k - 2)) &&
+                    Objects.equals(rec.get(k - 2), rec.get(k - 3))) {
+                    break;
                 }
             }
-            rec.add(basicBlocks.size());
-            if (k > 3 && Objects.equals(rec.get(k - 1), rec.get(k - 2)) &&
-                Objects.equals(rec.get(k - 2), rec.get(k - 3))) {
+        }
+        while (true) {
+            boolean flag = true;
+            for (int i = 0; i < basicBlocks.size(); i++) {
+                if (basicBlocks.get(i).deleteUseless()) {
+                    flag = false;
+                }
+            }
+            if (flag) {
                 break;
             }
         }
     }
 
     public void buildClashGraph() {
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            basicBlocks.get(i).removeUnaryIns();
+        }
         for (int i = 0; i < basicBlocks.size(); i++) {
             basicBlocks.get(i).calUseDef();
         }
@@ -186,32 +229,21 @@ public class IRFunction extends GlobalValue {
                 }
             }
         }
+        HashSet<Value> args = new HashSet<>();
+        for (int i = 0; i < functionType.getParamNum(); i++) {
+            args.add(functionType.getParam(i));
+        }
         for (int i = 0; i < inSet.size(); i++) {
             for (Value v1 : inSet.get(i)) {
-//                basicBlocks.get(i).getActivateVar().add(v1);
-//                if (valueToBB.get(v1).size() < 2) {
-//                    continue;
-//                }
-//                if (!clashGraph.containsKey(v1)) {
-//                    clashGraph.put(v1, new HashSet<>());
-//                }
-//                for (Value v2 : basicBlocks.get(i).getDefValue()) {
-//                    if (!valueToBB.containsKey(v2) || valueToBB.get(v2).size() < 2 ||
-//                        v1.equals(v2)) {
-//                        continue;
-//                    }
-//                    if (!clashGraph.containsKey(v1)) {
-//                        clashGraph.put(v1, new HashSet<>());
-//                    }
-//                    if (!clashGraph.containsKey(v2)) {
-//                        clashGraph.put(v2, new HashSet<>());
-//                    }
-//                    clashGraph.get(v1).add(v2);
-//                    clashGraph.get(v2).add(v1);
-//                }
-                for (Value v2 : inSet.get(i)) {
+                HashSet<Value> temp = new HashSet<>(inSet.get(i));
+                temp.addAll(basicBlocks.get(i).getDefined());
+                for (Value v2 : temp) {
                     if (!valueToBB.containsKey(v2) || valueToBB.get(v2).size() < 2 ||
-                        v1.equals(v2)) {
+                        v1.equals(v2) || args.contains(v2)) {
+                        continue;
+                    }
+                    if (!valueToBB.containsKey(v1) || valueToBB.get(v1).size() < 2 ||
+                        v1.equals(v2) || args.contains(v1)) {
                         continue;
                     }
                     if (!clashGraph.containsKey(v1)) {
@@ -223,6 +255,339 @@ public class IRFunction extends GlobalValue {
                     clashGraph.get(v1).add(v2);
                     clashGraph.get(v2).add(v1);
                 }
+            }
+        }
+    }
+
+    public void buildCFG() {
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            if (!fatherToSon.containsKey(basicBlocks.get(i))) {
+                fatherToSon.put(basicBlocks.get(i), new HashSet<>());
+            }
+            if (!sonToFather.containsKey(basicBlocks.get(i))) {
+                sonToFather.put(basicBlocks.get(i), new HashSet<>());
+            }
+            if (basicBlocks.get(i).getLastIns() instanceof BrIns brIns) {
+                if (brIns.getDest() != null) {
+                    fatherToSon.get(basicBlocks.get(i)).add(brIns.getDest());
+                    if (!sonToFather.containsKey(brIns.getDest())) {
+                        sonToFather.put(brIns.getDest(), new HashSet<>());
+                    }
+                    sonToFather.get(brIns.getDest()).add(basicBlocks.get(i));
+                } else {
+                    fatherToSon.get(basicBlocks.get(i)).add(brIns.getTrueBB());
+                    if (!sonToFather.containsKey(brIns.getTrueBB())) {
+                        sonToFather.put(brIns.getTrueBB(), new HashSet<>());
+                    }
+                    sonToFather.get(brIns.getTrueBB()).add(basicBlocks.get(i));
+                    fatherToSon.get(basicBlocks.get(i)).add(brIns.getFalseBB());
+                    if (!sonToFather.containsKey(brIns.getFalseBB())) {
+                        sonToFather.put(brIns.getFalseBB(), new HashSet<>());
+                    }
+                    sonToFather.get(brIns.getFalseBB()).add(basicBlocks.get(i));
+                }
+            }
+        }
+    }
+
+    private void calDom() {
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            basicBlocks.get(i).getDom().add(basicBlocks.get(0));
+        }
+        while (true) {
+            boolean unChange = true;
+            for (BasicBlock BB : basicBlocks) {
+                //某基本块所有前驱的dom的交集
+                HashSet<BasicBlock> andDom = new HashSet<>();
+                boolean flag = true;
+                for (BasicBlock prev : sonToFather.get(BB)) {
+                    if (flag) {
+                        //拷贝
+                        andDom.addAll(prev.getDom());
+                        flag = false;
+                        continue;
+                    }
+                    //求交集
+                    andDom.retainAll(prev.getDom());
+                }
+                andDom.add(BB); //加上自身
+                if (!andDom.equals(BB.getDom())) {
+                    unChange = false;
+                    BB.getDom().clear();
+                    BB.getDom().addAll(andDom);
+                }
+            }
+            if (unChange) {
+                break;
+            }
+        }
+        for (BasicBlock BB : basicBlocks) {
+            for (BasicBlock i : BB.getDom()) {
+                //首先满足严格支配BB
+                if (!BB.isStrictDom(i)) {
+                    continue;
+                }
+                //不严格支配任何严格支配 BB 的节点的节点
+                boolean flag = true;
+                for (BasicBlock j : BB.getDom()) {
+                    if (j.isStrictDom(i) && BB.isStrictDom(j)) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    BB.setImmediateDom(i);
+                    if (!domTree.containsKey(i)) {
+                        domTree.put(i, new HashSet<>());
+                    }
+                    domTree.get(i).add(BB);
+                    break;
+                }
+            }
+        }
+    }
+
+    //计算支配边界
+    private void calDF() {
+        calDom();
+        for (BasicBlock a : basicBlocks) {
+            for (BasicBlock b : fatherToSon.get(a)) {
+                BasicBlock x = a;
+                while (x != null && !b.isStrictDom(x)) {
+                    x.getDF().add(b);
+                    x = x.getImmediateDom();
+                }
+            }
+        }
+    }
+
+    //插入phi指令
+    public void insertPhi() {
+        calDF();
+        HashSet<Value> varSet = new HashSet<>();
+        for (BasicBlock BB : basicBlocks) {
+            for (Value v : BB.getInstructions()) {
+                if (v instanceof StoreIns storeIns &&
+                    storeIns.getPointer() instanceof AllocaIns allocaIns &&
+                    allocaIns.getDefType() instanceof IntegerType) {
+                    varSet.add(storeIns.getPointer());
+                }
+                if (v instanceof AllocaIns allocaIns &&
+                    allocaIns.getDefType() instanceof IntegerType) {
+                    varSet.add(v);
+                }
+            }
+        }
+        for (Value v : varSet) {
+            HashSet<BasicBlock> F = new HashSet<>();
+            HashSet<BasicBlock> defs = new HashSet<>();
+            User user = (User) v;
+            for (Use u : user.getOperands()) {
+                Value d = u.getValue();
+                BasicBlock b = ((Instruction) d).getParent();
+                if (containBB(b)) {
+                    defs.add(b);
+                }
+            }
+            HashSet<BasicBlock> W = new HashSet<>(defs);
+            while (!W.isEmpty()) {
+                BasicBlock X = (BasicBlock) (W.toArray())[0];
+                W.remove(X);
+                for (BasicBlock Y : X.getDF()) {
+                    if (!F.contains(Y)) {
+                        Phi phi = new Phi("", new IntegerType(32), Y, Operation.PHI);
+                        phi.addChoice(v);
+                        Y.addEntry(phi);
+                        F.add(Y);
+                        if (!defs.contains(Y)) {
+                            W.add(Y);
+                        }
+                    }
+                }
+            }
+        }
+        for (Value v : varSet) {
+            AllocaIns allocaIns = (AllocaIns) v;
+            ArrayList<Value> reachingDef = new ArrayList<>();
+            reachingDef.add(ConstInt.getZero()); //初始到达定义为0
+            varReName(basicBlocks.get(0), reachingDef, allocaIns);
+        }
+        ArrayList<Phi> phis = new ArrayList<>();
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            phis.addAll(basicBlocks.get(i).getPhi());
+        }
+        for (int i = 0; i < phis.size(); i++) {
+            boolean flag = true;
+            for (Use u : phis.get(i).getUseList()) {
+                if (!u.getUser().equals(phis.get(i))) {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag) {
+                phis.get(i).destroy();
+                phis.get(i).getParent().getInstructions().remove(phis.get(i));
+            }
+        }
+    }
+
+    private boolean containBB(BasicBlock basicBlock) {
+        HashSet<BasicBlock> blockHashSet = new HashSet<>(basicBlocks);
+        if (blockHashSet.contains(basicBlock)) {
+            return true;
+        }
+        return false;
+    }
+
+    private void varReName(BasicBlock BB, ArrayList<Value> reachingDef, AllocaIns alloc) {
+        int count = 0;
+        //DFS遍历整个支配树
+        for (int i = 0; i < BB.getInstructions().size(); i++) {
+            Instruction ins = BB.getInstructions().get(i);
+            if (ins instanceof AllocaIns allocaIns) {
+                //alloca直接删除
+                if (allocaIns.getDefType() instanceof IntegerType) {
+                    ins.destroy();
+                    if (BB.getFather().getBasicBlocks().get(0).equals(BB) &&
+                        i < BB.getFather().getParamNum() * 2) {
+                        continue; //函数形参保留，为了后端接口
+                    }
+                    ins.getParent().getInstructions().remove(ins);
+                    i--;
+                }
+            } else if (ins instanceof LoadIns loadIns && loadIns.getPointer().equals(alloc)) {
+                //load 指令：将所有其他指令中对该指令的使用替换为对该变量到达定义的使用，删除
+                if (!(loadIns.getPointer() instanceof AllocaIns allocaIns)) {
+                    continue;
+                }
+                if (!(allocaIns.getDefType() instanceof IntegerType)) {
+                    continue;
+                }
+                Value v = reachingDef.get(reachingDef.size() - 1);
+                replaceUsed(loadIns, v);
+                loadIns.destroy();
+                loadIns.getParent().getInstructions().remove(ins);
+                i--;
+            } else if (ins instanceof StoreIns storeIns && storeIns.getPointer().equals(alloc)) {
+                //store 指令：更新该变量的到达定义，删除
+                if (storeIns.getPointer() instanceof AllocaIns allocaIns &&
+                    allocaIns.getDefType() instanceof IntegerType) {
+                    reachingDef.add(storeIns.getValue());
+                    storeIns.destroy();
+                    count++;
+                    if (BB.getFather().getBasicBlocks().get(0).equals(BB) &&
+                        i < BB.getFather().getParamNum() * 2) {
+                        continue; //函数形参保留，为了后端接口
+                    }
+                    storeIns.getParent().getInstructions().remove(ins);
+                    i--;
+                }
+            } else if (ins instanceof Phi phi && phi.getOldValue().equals(alloc)) {
+                //Phi：更新原变量的到达定义
+                reachingDef.add(phi);
+                phi.getOperands().remove(phi.getOldValue());
+                count++;
+            }
+        }
+        for (BasicBlock succeed : fatherToSon.get(BB)) {
+            for (Instruction ins : succeed.getInstructions()) {
+                if (ins instanceof Phi phi && phi.getOldValue().equals(alloc)) {
+                    Value v = reachingDef.get(reachingDef.size() - 1);
+                    phi.setChoice(v, BB);
+                }
+            }
+        }
+        if (domTree.containsKey(BB)) {
+            for (BasicBlock b : domTree.get(BB)) {
+                varReName(b, reachingDef, alloc);
+            }
+        }
+        for (int i = 0; i < count; i++) {
+            reachingDef.remove(reachingDef.size() - 1);
+        }
+    }
+
+    private void replaceUsed(LoadIns loadIns, Value reachingDef) {
+        for (Use u : loadIns.getUseList()) {
+            Instruction useIns = (Instruction) u.getUser();
+            if (useIns instanceof BrIns brIns) {
+                brIns.setValue(reachingDef);
+            } else if (useIns instanceof CalculateIns calculateIns) {
+                if (calculateIns.getOp1().equals(loadIns)) {
+                    calculateIns.setOp1(reachingDef);
+                }
+                if (calculateIns.getOp2().equals(loadIns)) {
+                    calculateIns.setOp2(reachingDef);
+                }
+            } else if (useIns instanceof CallIns callIns) {
+                for (int i = 0; i < callIns.getRealParams().size(); i++) {
+                    if (callIns.getRealParams().get(i).equals(loadIns)) {
+                        callIns.getRealParams().set(i, reachingDef);
+                        Use.getInstance(reachingDef, callIns);
+                    }
+                }
+            } else if (useIns instanceof CmpIns cmpIns) {
+                if (cmpIns.getOp1().equals(loadIns)) {
+                    cmpIns.setOp1(reachingDef);
+                }
+                if (cmpIns.getOp2().equals(loadIns)) {
+                    cmpIns.setOp2(reachingDef);
+                }
+            } else if (useIns instanceof GetIns getIns) {
+                for (int i = 0; i < getIns.getIndex().size(); i++) {
+                    if (getIns.getIndex().get(i).equals(loadIns)) {
+                        getIns.getIndex().set(i, reachingDef);
+                        Use.getInstance(reachingDef, getIns);
+                    }
+                }
+            } else if (useIns instanceof Phi phi) {
+                phi.replace(reachingDef, loadIns);
+            } else if (useIns instanceof RetIns retIns) {
+                retIns.setValue(reachingDef);
+            } else if (useIns instanceof StoreIns storeIns) {
+                storeIns.setValue(reachingDef);
+            } else if (useIns instanceof UnaryIns unaryIns) {
+                unaryIns.setValue(reachingDef);
+            }
+        }
+    }
+
+    public void deletePhi() {
+        ArrayList<Phi> phis = new ArrayList<>();
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            phis.addAll(basicBlocks.get(i).getPhi());
+        }
+        ArrayList<AllocaIns> allocas = new ArrayList<>();
+        for (int i = 0; i < phis.size(); i++) {
+            AllocaIns allocaIns = new AllocaIns("", new PointerType(new IntegerType(32)),
+                basicBlocks.get(0), Operation.ALLOCA, false);
+            basicBlocks.get(0).addEnd(allocaIns);
+            allocas.add(allocaIns);
+            LoadIns loadIns = new LoadIns("", new IntegerType(32), phis.get(i).getParent(),
+                Operation.LOAD, phis.get(i), allocaIns);
+            phis.get(i).getParent().addEntry(loadIns);
+            phis.get(i).getParent().getInstructions().remove(phis.get(i));
+        }
+        for (int i = 0; i < phis.size(); i++) {
+            phis.get(i).destroy();
+            for (BasicBlock j : phis.get(i).getChoice().keySet()) {
+                StoreIns storeIns = new StoreIns("", null, j, Operation.STORE,
+                    phis.get(i).getChoice().get(j), allocas.get(i));
+                j.addEnd(storeIns);
+            }
+        }
+    }
+
+    public void calSimplify() {
+        while (true) {
+            boolean flag = true;
+            for (int i = 0; i < basicBlocks.size(); i++) {
+                if (basicBlocks.get(i).calSimplify()) {
+                    flag = false;
+                }
+            }
+            if (flag) {
+                break;
             }
         }
     }
@@ -242,11 +607,7 @@ public class IRFunction extends GlobalValue {
             }
         }
         sb.append("){\n");
-        for (int i = 0; i < basicBlocks.get(0).getInstructions().size(); i++) {
-            sb.append("    ");
-            sb.append(basicBlocks.get(0).getInstructions().get(i));
-        }
-        for (int i = 1; i < basicBlocks.size(); i++) {
+        for (int i = 0; i < basicBlocks.size(); i++) {
             sb.append(basicBlocks.get(i));
         }
         sb.append("}\n");
@@ -267,5 +628,9 @@ public class IRFunction extends GlobalValue {
 
     public Type getRetType() {
         return functionType.getRetType();
+    }
+
+    public HashMap<BasicBlock, HashSet<BasicBlock>> getDomTree() {
+        return domTree;
     }
 }

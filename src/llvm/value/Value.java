@@ -2,9 +2,19 @@ package llvm.value;
 
 import llvm.Use;
 import llvm.type.Type;
+import llvm.value.instruction.BrIns;
+import llvm.value.instruction.CalculateIns;
+import llvm.value.instruction.CallIns;
+import llvm.value.instruction.CmpIns;
+import llvm.value.instruction.GetIns;
 import llvm.value.instruction.Instruction;
+import llvm.value.instruction.Phi;
+import llvm.value.instruction.RetIns;
+import llvm.value.instruction.StoreIns;
+import llvm.value.instruction.UnaryIns;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Objects;
 
 public class Value {
@@ -84,5 +94,67 @@ public class Value {
             return min;
         }
         return -1;
+    }
+
+    public HashSet<BasicBlock> activeBlock() {
+        HashSet<BasicBlock> blocks = new HashSet<>();
+        for (int i = 0; i < useList.size(); i++) {
+            User user = useList.get(i).getUser();
+            if (user instanceof Instruction instruction) {
+                blocks.add(instruction.getParent());
+            }
+        }
+        if (this instanceof Instruction instruction) {
+            blocks.add(instruction.getParent());
+        }
+        return blocks;
+    }
+
+    public void replaceUsed(Value value) {
+        ArrayList<Use> temp = new ArrayList<>(useList);
+        for (Use u : temp) {
+            if (!(u.getUser() instanceof Instruction useIns)) {
+                continue;
+            }
+            if (useIns instanceof BrIns brIns) {
+                brIns.setValue(value);
+            } else if (useIns instanceof CalculateIns calculateIns) {
+                if (calculateIns.getOp1().equals(this)) {
+                    calculateIns.setOp1(value);
+                }
+                if (calculateIns.getOp2().equals(this)) {
+                    calculateIns.setOp2(value);
+                }
+            } else if (useIns instanceof CallIns callIns) {
+                for (int i = 0; i < callIns.getRealParams().size(); i++) {
+                    if (callIns.getRealParams().get(i).equals(this)) {
+                        callIns.getRealParams().set(i, value);
+                        Use.getInstance(value, callIns);
+                    }
+                }
+            } else if (useIns instanceof CmpIns cmpIns) {
+                if (cmpIns.getOp1().equals(this)) {
+                    cmpIns.setOp1(value);
+                }
+                if (cmpIns.getOp2().equals(this)) {
+                    cmpIns.setOp2(value);
+                }
+            } else if (useIns instanceof GetIns getIns) {
+                for (int i = 0; i < getIns.getIndex().size(); i++) {
+                    if (getIns.getIndex().get(i).equals(this)) {
+                        getIns.getIndex().set(i, value);
+                        Use.getInstance(value, getIns);
+                    }
+                }
+            } else if (useIns instanceof Phi phi) {
+                phi.replace(value, this);
+            } else if (useIns instanceof RetIns retIns) {
+                retIns.setValue(value);
+            } else if (useIns instanceof StoreIns storeIns) {
+                storeIns.setValue(value);
+            } else if (useIns instanceof UnaryIns unaryIns) {
+                unaryIns.setValue(value);
+            }
+        }
     }
 }

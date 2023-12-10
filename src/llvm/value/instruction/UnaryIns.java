@@ -34,4 +34,9 @@ public class UnaryIns extends Instruction{
         return getIdent() + " = trunc " + value.getType() + " " + value.getIdent() +
             " to " + getType() + "\n";
     }
+
+    public void setValue(Value value) {
+        this.value = value;
+        Use.getInstance(value, this);
+    }
 }

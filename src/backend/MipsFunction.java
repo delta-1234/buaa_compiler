@@ -4,6 +4,7 @@ import llvm.value.Value;
 import llvm.value.constant.IRFunction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -17,10 +18,15 @@ public class MipsFunction {
     public HashMap<Value, Integer> varToReg;
     public HashMap<Value, HashSet<Value>> clashGraph;
     private StringBuilder sb;
-    //函数返回参数$v0-$v1(2-3)
+    private final int globalRegNum = 8;
+    private final Integer[] local = {3, 8, 9, 10, 11, 12, 13, 14, 15, 24, 25};
+    public final ArrayList<Integer> localReg = new ArrayList<>(Arrays.asList(local));
+    private final Integer[] global = {16, 17, 18, 19, 20, 21, 22, 23};
+    public final ArrayList<Integer> globalReg = new ArrayList<>(Arrays.asList(global));
+    //函数返回参数$v0 (2)
     //函数参数寄存器$a0-$a3(4-7)，共4个
-    //全局寄存器$s0-$s7(16-23)，共8个
-    //局部寄存器$t0-$t7(8-15)，$t8-$t9(24-25)，共10个
+    //全局寄存器$s0-$s7(16-23)共8个
+    //局部寄存器$t0-$t7(8-15)，$t8-$t9(24-25), $v1(3)共11个
     //堆指针$gp(28)
     //栈指针$sp(29)
     //函数栈帧指针$fp(30)
@@ -52,6 +58,7 @@ public class MipsFunction {
     }
 
     public void build() {
+        irFunction.buildClashGraph();
         //分配全局寄存器
         HashMap<Value, HashSet<Value>> clashMap = new HashMap<>();
         for (Value v : irFunction.getClashGraph().keySet()) {
@@ -64,7 +71,7 @@ public class MipsFunction {
         while (true) {
             boolean flag = false;
             for (Value v : clashMap.keySet()) {
-                if (clashMap.get(v).size() < 8) {
+                if (clashMap.get(v).size() < globalRegNum) { //全局寄存器数
                     order.add(v);
                     flag = true;
                     for (Value v1 : clashMap.get(v)) {
@@ -95,7 +102,7 @@ public class MipsFunction {
             clashMap.remove(maxClash);
         }
         for (int i = order.size() - 1; i >= 0; i--) {
-            boolean[] x = new boolean[8];
+            boolean[] x = new boolean[globalRegNum];
             for (Value v : irFunction.getClashGraph().get(order.get(i))) {
                 if (varToReg.containsKey(v)) {
                     x[varToReg.get(v) - 16] = true;

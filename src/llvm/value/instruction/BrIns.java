@@ -22,6 +22,7 @@ public class BrIns extends Instruction {
         dest = null;
         setIdent("br" + count);
         count++;
+        Use.getInstance(value, this);
         Use.getInstance(trueBB, this);
         Use.getInstance(falseBB, this);
     }
@@ -77,5 +78,29 @@ public class BrIns extends Instruction {
                 falseBB.getIdent() + "\n";
         }
         return "br label " + dest.getIdent() + "\n";
+    }
+
+    public void setValue(Value value) {
+        for (Use u : this.getOperands()) {
+            if (u.getValue().equals(this.value)) {
+                this.getOperands().remove(u);
+                this.value.getUseList().remove(u);
+                break;
+            }
+        }
+        this.value = value;
+        Use.getInstance(value, this);
+    }
+
+    public void removeValue() {
+        for (Use u : this.getOperands()) {
+            if (u.getValue().equals(value)) {
+                this.getOperands().remove(u);
+                value.getUseList().remove(u);
+                break;
+            }
+        }
+        trueBB = null;
+        falseBB = null;
     }
 }

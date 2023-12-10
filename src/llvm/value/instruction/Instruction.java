@@ -18,12 +18,6 @@ public class Instruction extends User {
         return parent;
     }
 
-    public void destroy() {
-        for (int i = 0; i < getOperands().size(); i++) {
-            getOperands().get(i).getValue().getUseList().remove(getOperands().get(i));
-        }
-    }
-
     public Operation getOp() {
         return op;
     }

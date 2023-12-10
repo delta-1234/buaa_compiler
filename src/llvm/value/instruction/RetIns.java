@@ -37,4 +37,9 @@ public class RetIns extends Instruction{
         }
         return "ret void\n";
     }
+
+    public void setValue(Value value) {
+        this.value = value;
+        Use.getInstance(value, this);
+    }
 }

@@ -16,4 +16,13 @@ public class User extends Value {
     public ArrayList<Use> getOperands() {
         return operands;
     }
+
+    public void destroy() {
+        for (int i = 0; i < getOperands().size(); i++) {
+            getOperands().get(i).getValue().getUseList().remove(getOperands().get(i));
+        }
+        for (int i = 0; i < getUseList().size(); i++) {
+            getUseList().get(i).getUser().getOperands().remove(getUseList().get(i));
+        }
+    }
 }
