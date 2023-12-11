@@ -2,61 +2,192 @@ declare i32 @getint()
 declare void @putint(i32)
 declare void @putch(i32)
 declare void @putstr(i8*)
-define dso_local i32 @f(i32 %arg1, i32 %arg2, i32 %arg3, i32 %arg4, i32 %arg5, i32 %arg6, i32 %arg7, i32 %arg8, i32 %arg9, i32 %arg10, i32 %arg11, i32 %arg12, i32 %arg13, i32 %arg14, i32 %arg15){
+@var_1 = dso_local global i32 0
+@varr_1 = dso_local global i32 0
+@varr_2 = dso_local global i32 10
+@varrr_1 = dso_local global i32 10
+@varrrr_1 = dso_local global i32 666
+@varrrr_2 = dso_local global i32 0
+@HelLo_World = dso_local constant [5 x i32] [i32 1, i32 55, i32 0, i32 10, i32 9999]
+@a_r__r = dso_local constant [2 x [2 x i32]] [[2 x i32] [i32 -1, i32 0], [2 x i32] [i32 6, i32 -555]]
+@B = dso_local constant [1 x [1 x i32]] [[1 x i32] [i32 9966]]
+@c = dso_local constant [1 x i32] [i32 555]
+@con_6 = dso_local constant [2 x [1 x i32]] [[1 x i32] [i32 0], [1 x i32] [i32 6]]
+@yyy = dso_local constant [2 x [3 x i32]] [[3 x i32] [i32 1, i32 0, i32 2], [3 x i32] [i32 -1, i32 3, i32 -4]]
+@var_2 = dso_local global [100 x i32] zeroinitializer
+@var_3 = dso_local global [2 x [12 x i32]] zeroinitializer
+@varr_3 = dso_local global [2 x i32] zeroinitializer
+@varr_4 = dso_local global [5 x [999 x i32]] zeroinitializer
+@varrr_2 = dso_local global [2 x i32] [i32 1, i32 2]
+@varrr_3 = dso_local global [2 x [2 x i32]] [[2 x i32] [i32 6, i32 6], [2 x i32] [i32 -1, i32 0]]
+@varrrr_3 = dso_local global [5 x i32] [i32 1, i32 5, i32 1, i32 96, i32 -5]
+@varrrr_4 = dso_local global [1 x [2 x i32]] [[2 x i32] [i32 555, i32 -5]]
+define dso_local void @func1(i32 %arg1){
 
 B0:
     %def0 = alloca i32
-    store i32 %arg15, i32* %def0
-    %def1 = alloca i32
-    store i32 %arg14, i32* %def1
-    %def2 = alloca i32
-    store i32 %arg13, i32* %def2
-    %def3 = alloca i32
-    store i32 %arg12, i32* %def3
+    store i32 %arg1, i32* %def0
+    ret void
+}
+
+define dso_local i32 @func2(i32 %arg2, i32* %arg3){
+
+B1:
+    %def3 = alloca i32*
+    store i32* %arg3, i32* * %def3
     %def4 = alloca i32
-    store i32 %arg11, i32* %def4
-    %def5 = alloca i32
-    store i32 %arg10, i32* %def5
-    %def6 = alloca i32
-    store i32 %arg9, i32* %def6
-    %def7 = alloca i32
-    store i32 %arg8, i32* %def7
-    %def8 = alloca i32
-    store i32 %arg7, i32* %def8
-    %def9 = alloca i32
-    store i32 %arg6, i32* %def9
-    %def10 = alloca i32
-    store i32 %arg5, i32* %def10
-    %def11 = alloca i32
-    store i32 %arg4, i32* %def11
-    %def12 = alloca i32
-    store i32 %arg3, i32* %def12
-    %def13 = alloca i32
-    store i32 %arg2, i32* %def13
+    store i32 %arg2, i32* %def4
+    %ld0 = load i32*, i32* * %def3
+    %get0 = getelementptr i32, i32* %ld0, i32 0
+    store i32 46554646, i32* %get0
+    br label %B9
+
+B9:
+    ret i32 666
+}
+
+define dso_local void @func3([3 x i32]* %arg4){
+
+B10:
+    %def5 = alloca [3 x i32]*
+    store [3 x i32]* %arg4, [3 x i32]* * %def5
     %def14 = alloca i32
-    store i32 %arg1, i32* %def14
-    %calc0 = add i32 %arg1, %arg2
-    %calc1 = add i32 %calc0, %arg3
-    %calc2 = add i32 %calc1, %arg4
-    %calc3 = add i32 %calc2, %arg5
-    %calc4 = add i32 %calc3, %arg6
-    %calc5 = add i32 %calc4, %arg7
-    %calc6 = add i32 %calc5, %arg8
-    %calc7 = add i32 %calc6, %arg9
-    %calc8 = add i32 %calc7, %arg10
-    %calc9 = add i32 %calc8, %arg11
-    %calc10 = add i32 %calc9, %arg12
-    %calc11 = add i32 %calc10, %arg13
-    %calc12 = add i32 %calc11, %arg14
-    %calc13 = add i32 %calc12, %arg15
-    ret i32 %calc13
+    br label %B11
+
+B11:
+    %ld5 = load [3 x i32]*, [3 x i32]* * %def5
+    %get2 = getelementptr [3 x i32], [3 x i32]* %ld5, i32 0
+    %get3 = getelementptr [3 x i32], [3 x i32]* %get2, i32 0, i32 0
+    %ld6 = load i32, i32* %get3
+    %cmp3 = icmp sgt i32 %ld6, 10
+    %zot1 = zext i1 %cmp3 to i32
+    %cmp4 = icmp ne i32 %zot1, 0
+    store i32 0, i32* %def14
+    br i1 %cmp4, label %B12, label %B15
+
+B12:
+    ret void
+
+B15:
+    %ld17 = load i32, i32* %def14
+    %cmp5 = icmp slt i32 %ld17, 100
+    %zot2 = zext i1 %cmp5 to i32
+    %cmp6 = icmp ne i32 %zot2, 0
+    br i1 %cmp6, label %B19, label %B17
+
+B19:
+    %cmp7 = icmp eq i32 %ld17, 50
+    br i1 %cmp7, label %B20, label %B21
+
+B20:
+    %ld9 = load [3 x i32]*, [3 x i32]* * %def5
+    %get4 = getelementptr [3 x i32], [3 x i32]* %ld9, i32 0
+    %get5 = getelementptr [3 x i32], [3 x i32]* %get4, i32 0, i32 0
+    store i32 1, i32* %get5
+    br label %B17
+
+B21:
+    %calc0 = add i32 1, %ld17
+    store i32 %calc0, i32* %def14
+    br label %B15
+
+B17:
+    ret void
+}
+
+define dso_local i32 @func4(i32 %arg5, i32* %arg6, [3 x i32]* %arg7){
+
+B23:
+    %def7 = alloca [3 x i32]*
+    store [3 x i32]* %arg7, [3 x i32]* * %def7
+    %def8 = alloca i32*
+    store i32* %arg6, i32* * %def8
+    %def9 = alloca i32
+    store i32 %arg5, i32* %def9
+    ret i32 999
+}
+
+define dso_local i32 @func5(){
+
+B24:
+    br label %B35
+
+B35:
+    %get6 = getelementptr [2 x [12 x i32]], [2 x [12 x i32]]* @var_3, i32 0, i32 1, i32 1
+    %ld11 = load i32, i32* %get6
+    %calc1 = mul i32 55, %ld11
+    %cmp8 = icmp sle i32 4, %calc1
+    %zot3 = zext i1 %cmp8 to i32
+    %cmp9 = icmp ne i32 %zot3, 0
+    br i1 %cmp9, label %B36, label %B42
+
+B36:
+    ret i32 4564665
+
+B42:
+    ret i32 5456
 }
 
 define dso_local i32 @main(){
 
-B1:
-    %call0 = call i32 @f(i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15)
-    call void @putint(i32 %call0)
+B47:
+    %def10 = alloca [2 x [3 x i32]]
+    %get7 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 0, i32 0
+    store i32 0, i32* %get7
+    %get8 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 0, i32 1
+    store i32 16, i32* %get8
+    %get9 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 0, i32 2
+    store i32 3, i32* %get9
+    %get10 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 1, i32 0
+    store i32 678, i32* %get10
+    %ld13 = load i32, i32* @varrrr_1
+    %calc3 = sdiv i32 5555, %ld13
+    %get11 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 1, i32 1
+    store i32 %calc3, i32* %get11
+    %get12 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 1, i32 2
+    store i32 0, i32* %get12
+    %def11 = alloca [4 x i32]
+    %get13 = getelementptr [4 x i32], [4 x i32]* %def11, i32 0, i32 0
+    store i32 0, i32* %get13
+    %ld14 = load i32, i32* %get7
+    %calc4 = mul i32 6, %ld14
+    %get15 = getelementptr [4 x i32], [4 x i32]* %def11, i32 0, i32 1
+    store i32 %calc4, i32* %get15
+    %get16 = getelementptr [4 x i32], [4 x i32]* %def11, i32 0, i32 2
+    store i32 5555, i32* %get16
+    %get17 = getelementptr [4 x i32], [4 x i32]* %def11, i32 0, i32 3
+    store i32 -27, i32* %get17
+    %call0 = call i32 @getint()
+    %ld15 = load i32, i32* @varr_2
+    call void @func1(i32 %ld15)
+    %call2 = call i32 @getint()
+    store i32 %call2, i32* %get12
+    %get19 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 1
+    %get20 = getelementptr [3 x i32], [3 x i32]* %get19, i32 0, i32 0
+    %call3 = call i32 @func2(i32 111, i32* %get20)
+    %get21 = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %def10, i32 0, i32 0
+    call void @func3([3 x i32]* %get21)
+    %call5 = call i32 @getint()
+    store i32 %call5, i32* %get15
+    %call6 = call i32 @func4(i32 %call0, i32* %get13, [3 x i32]* %get21)
+    %call7 = call i32 @func5()
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
+    call void @putch(i32 10)
+    call void @putint(i32 1)
     call void @putch(i32 10)
     ret i32 0
 }

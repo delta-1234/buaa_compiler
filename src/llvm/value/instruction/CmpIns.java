@@ -60,4 +60,8 @@ public class CmpIns extends Instruction{
         this.op2 = op2;
         Use.getInstance(op2, this);
     }
+
+    public int getCondNum() {
+        return cond;
+    }
 }

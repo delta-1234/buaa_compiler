@@ -42,4 +42,9 @@ public class StoreIns extends Instruction {
         this.value = value;
         Use.getInstance(value, this);
     }
+
+    public void setPointer(User pointer) {
+        this.pointer = pointer;
+        Use.getInstance(this, pointer);
+    }
 }

@@ -445,7 +445,8 @@ public class MipsBlock {
                             }
                         }
                     } else { //大于4个参数
-                        int loc = (callIns.getRealParams().size() - 1 - i) * 4 + mipsFunction.stackP;
+                        int loc =
+                            (callIns.getRealParams().size() - 1 - i) * 4 + mipsFunction.stackP;
                         if (callIns.getRealParams().get(i) instanceof ConstInt constInt) {
                             mipsIns = new MipsIns("li", 26, constInt.getValue());
                             mipsInsList.add(mipsIns);
@@ -699,8 +700,7 @@ public class MipsBlock {
             for (int i : mipsFunction.localReg) {
                 if (mipsFunction.regToVar[i].getNextUse(BB, location) < 0) {
                     if (mipsFunction.regToVar[i] instanceof AllocaIns ||
-                        mipsFunction.regToVar[i] instanceof GlobalValue ||
-                        mipsFunction.regToVar[i] instanceof GetIns) {
+                        mipsFunction.regToVar[i] instanceof GlobalValue) {
                         latestUse = i;
                         latest = 0; //需要写回内存
                         break;
@@ -712,9 +712,10 @@ public class MipsBlock {
                             mipsFunction.regToVar[i] instanceof LoadIns ||
                             mipsFunction.regToVar[i] instanceof UnaryIns ||
                             (mipsFunction.regToVar[i] instanceof CallIns callIns &&
-                                callIns.getFunc().getRetType() instanceof IntegerType)) {
+                                callIns.getFunc().getRetType() instanceof IntegerType) ||
+                            mipsFunction.regToVar[i] instanceof GetIns) {
                             latestUse = i;
-                            latest = 1; //需要写回内存
+                            latest = -2; //需要写回内存
                             break;
                         }
                     }
@@ -729,7 +730,7 @@ public class MipsBlock {
             }
             //清除上个引用
             Value temp = mipsFunction.regToVar[latestUse];
-            if (latest == 0) {     //需要写回内存
+            if (latest >= 0) {     //需要写回内存
                 if (temp instanceof GlobalVariable gv) { //全局变量
                     mipsIns = new MipsIns("la", 26, gv.getName());
                     mipsInsList.add(mipsIns);
@@ -747,8 +748,7 @@ public class MipsBlock {
                     mipsIns = new MipsIns("sw", latestUse, offset, 30);
                     mipsInsList.add(mipsIns);
                 }
-            } else if (latest == 1) { //latest == 1，不一定需要写回内存
-                System.out.println(temp);
+            } else if (latest == -2) { //latest == -2，不一定需要写回内存
                 Instruction ins = (Instruction) temp;
                 if (ins.getParent().equals(BB)) { //其他情况不需要写回，因为其值不会改变
                     int offset;
@@ -792,6 +792,7 @@ public class MipsBlock {
             mipsInsList.add(mipsIns);
         } else if (value instanceof GetIns getIns) {
             //将内存中数组地址加载进寄存器
+            System.out.println(getIns);
             mipsIns = new MipsIns("lw", regNum, -mipsFunction.stack.get(getIns), 30);
             mipsInsList.add(mipsIns);
         } else { //局部变量，包括局部数组，或者参数数组
@@ -837,6 +838,7 @@ public class MipsBlock {
             } else if (temp.activeBlock().size() > 1 &&
                 (temp instanceof CalculateIns || temp instanceof CmpIns ||
                     temp instanceof LoadIns || temp instanceof UnaryIns ||
+                    temp instanceof GetIns ||
                     (temp instanceof CallIns callIns &&
                         callIns.getFunc().getRetType() instanceof IntegerType))) {
                 Instruction ins = (Instruction) temp;

@@ -13,12 +13,14 @@ import llvm.value.instruction.CmpIns;
 import llvm.value.instruction.GetIns;
 import llvm.value.instruction.Instruction;
 import llvm.value.instruction.LoadIns;
+import llvm.value.instruction.Operation;
 import llvm.value.instruction.Phi;
 import llvm.value.instruction.RetIns;
 import llvm.value.instruction.StoreIns;
 import llvm.value.instruction.UnaryIns;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class BasicBlock extends Value {
@@ -188,7 +190,8 @@ public class BasicBlock extends Value {
                 if (callIns.getFunc().getRetType() instanceof IntegerType) {
                     defined.add(callIns);
                 }
-                if (callIns.getFunc().getRetType() instanceof IntegerType && !useValue.contains(callIns)) {
+                if (callIns.getFunc().getRetType() instanceof IntegerType &&
+                    !useValue.contains(callIns)) {
                     defValue.add(callIns);
                 }
             } else if (instructions.get(i) instanceof CmpIns cmpIns) {
@@ -207,6 +210,19 @@ public class BasicBlock extends Value {
                     !defValue.contains(retIns.getValue())) {
                     useValue.add(retIns.getValue());
                 }
+            } else if (instructions.get(i) instanceof GetIns getIns) {
+                for (Value v : getIns.getIndex()) {
+                    if (v instanceof ConstInt) {
+                        continue;
+                    }
+                    if (!defValue.contains(v)) {
+                        useValue.add(v);
+                    }
+                }
+                if (!useValue.contains(getIns)) {
+                    defValue.add(getIns);
+                }
+                defined.add(getIns);
             }
         }
     }
@@ -367,5 +383,82 @@ public class BasicBlock extends Value {
             }
         }
         return flag;
+    }
+
+    public boolean LVN() {
+        HashMap<ArrayList<Value>, Value> LVNmap = new HashMap<>();
+        boolean flag = false;
+        for (int i = 0; i < instructions.size(); i++) {
+            if (instructions.get(i).getOp() == Operation.STORE ||
+                instructions.get(i).getOp() == Operation.LOAD ||
+                instructions.get(i).getOp() == Operation.CALL ||
+                instructions.get(i).getOp() == Operation.RET ||
+                instructions.get(i).getOp() == Operation.ALLOCA ||
+                instructions.get(i).getOp() == Operation.BR) {
+                continue;
+            }
+            ArrayList<Value> temp = getRealOperation(instructions.get(i));
+            if (!LVNmap.containsKey(temp)) {
+                LVNmap.put(temp, instructions.get(i));
+                if (instructions.get(i).getOp() == Operation.ADD ||
+                    instructions.get(i).getOp() == Operation.MUL) {
+                    ArrayList<Value> t = new ArrayList<>();
+                    t.add(temp.get(0));
+                    t.add(temp.get(2));
+                    t.add(temp.get(1));
+                    LVNmap.put(t, instructions.get(i));
+                } else if (instructions.get(i) instanceof CmpIns cmpIns) {
+                    if (cmpIns.getCond().equals("eq") || cmpIns.getCond().equals("ne")) {
+                        ArrayList<Value> t = new ArrayList<>();
+                        t.add(temp.get(0));
+                        t.add(temp.get(1));
+                        t.add(temp.get(3));
+                        t.add(temp.get(2));
+                        LVNmap.put(t, instructions.get(i));
+                    }
+                }
+            } else {
+                Value v = LVNmap.get(temp);
+                instructions.get(i).replaceUsed(v);
+                instructions.get(i).destroy();
+                instructions.remove(i);
+                i--;
+                flag = true;
+            }
+        }
+        return flag;
+    }
+
+    private ArrayList<Value> getRealOperation(Instruction ins) {
+        ArrayList<Value> temp = new ArrayList<>();
+        ConstInt zero = new ConstInt("0", new IntegerType(32), 0);
+        ConstInt one = new ConstInt("1", new IntegerType(32), 1);
+        ConstInt two = new ConstInt("2", new IntegerType(32), 2);
+        ConstInt three = new ConstInt("3", new IntegerType(32), 3);
+        if (ins instanceof CalculateIns calculateIns) {
+            temp.add(zero);
+            ConstInt constInt =
+                new ConstInt(String.valueOf(calculateIns.getOpNum()), new IntegerType(32),
+                    calculateIns.getOpNum());
+            temp.add(constInt);
+            temp.add(calculateIns.getOp1());
+            temp.add(calculateIns.getOp2());
+        } else if (ins instanceof CmpIns cmpIns) {
+            temp.add(one);
+            ConstInt constInt =
+                new ConstInt(String.valueOf(cmpIns.getCondNum()), new IntegerType(32),
+                    cmpIns.getCondNum());
+            temp.add(constInt);
+            temp.add(cmpIns.getOp1());
+            temp.add(cmpIns.getOp2());
+        } else if (ins instanceof GetIns getIns) {
+            temp.add(two);
+            temp.add(getIns.getValue());
+            temp.addAll(getIns.getIndex());
+        } else if (ins instanceof UnaryIns unaryIns) {
+            temp.add(three);
+            temp.add(unaryIns.getValue());
+        }
+        return temp;
     }
 }

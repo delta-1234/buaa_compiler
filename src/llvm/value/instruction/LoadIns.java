@@ -83,4 +83,9 @@ public class LoadIns extends Instruction {
         return getIdent() + " = load " +
             getType() + ", " + pointer.getType() + " " + pointer.getIdent() + "\n";
     }
+
+    public void setPointer(Value pointer) {
+        this.pointer = pointer;
+        Use.getInstance(pointer, this);
+    }
 }

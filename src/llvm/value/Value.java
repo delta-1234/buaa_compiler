@@ -8,6 +8,8 @@ import llvm.value.instruction.CallIns;
 import llvm.value.instruction.CmpIns;
 import llvm.value.instruction.GetIns;
 import llvm.value.instruction.Instruction;
+import llvm.value.instruction.LoadIns;
+import llvm.value.instruction.Operation;
 import llvm.value.instruction.Phi;
 import llvm.value.instruction.RetIns;
 import llvm.value.instruction.StoreIns;
@@ -90,6 +92,23 @@ public class Value {
                 }
             }
         }
+        if (this instanceof GetIns getIns) {
+            for (Use u : getIns.getOperands()) {
+                if (u.getValue() instanceof StoreIns ins &&
+                    ins.getParent().equals(BB)) {
+                    if (ins.getLocation() < nowLoc) {
+                        continue;
+                    }
+                    if (min < 0) {
+                        min = ins.getLocation() - nowLoc;
+                        continue;
+                    }
+                    if (min > ins.getLocation() - nowLoc) {
+                        min = ins.getLocation() - nowLoc;
+                    }
+                }
+            }
+        }
         if (min >= 0) {
             return min;
         }
@@ -105,6 +124,11 @@ public class Value {
             }
         }
         if (this instanceof Instruction instruction) {
+            for (Use u : instruction.getOperands()) {
+                if (u.getValue() instanceof StoreIns storeIns) {
+                    blocks.add(storeIns.getParent());
+                }
+            }
             blocks.add(instruction.getParent());
         }
         return blocks;
@@ -140,6 +164,9 @@ public class Value {
                     cmpIns.setOp2(value);
                 }
             } else if (useIns instanceof GetIns getIns) {
+                if (getIns.getValue().equals(this)) {
+                    getIns.setValue(value);
+                }
                 for (int i = 0; i < getIns.getIndex().size(); i++) {
                     if (getIns.getIndex().get(i).equals(this)) {
                         getIns.getIndex().set(i, value);
@@ -154,6 +181,16 @@ public class Value {
                 storeIns.setValue(value);
             } else if (useIns instanceof UnaryIns unaryIns) {
                 unaryIns.setValue(value);
+            } else if (useIns instanceof LoadIns loadIns) {
+                loadIns.setPointer(value);
+            }
+        }
+        if (this instanceof GetIns getIns) {
+            temp = new ArrayList<>(getIns.getOperands());
+            for (Use u : temp) {
+                if (u.getValue() instanceof StoreIns storeIns) {
+                    storeIns.setPointer((User) value);
+                }
             }
         }
     }

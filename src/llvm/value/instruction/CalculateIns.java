@@ -45,4 +45,18 @@ public class CalculateIns extends Instruction {
         this.op2 = op2;
         Use.getInstance(op2, this);
     }
+
+    public int getOpNum() {
+        if (getOp() == Operation.ADD) {
+            return 1;
+        } else if (getOp() == Operation.SUB) {
+            return 2;
+        } else if (getOp() == Operation.MUL) {
+            return 3;
+        } else if (getOp() == Operation.SDIV) {
+            return 4;
+        } else {
+            return 5;
+        }
+    }
 }

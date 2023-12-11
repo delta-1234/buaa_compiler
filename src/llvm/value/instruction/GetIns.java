@@ -59,4 +59,9 @@ public class GetIns extends Instruction{
         sb.append("\n");
         return sb.toString();
     }
+
+    public void setValue(Value value) {
+        this.value = value;
+        Use.getInstance(value, this);
+    }
 }

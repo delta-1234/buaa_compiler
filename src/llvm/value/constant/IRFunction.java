@@ -592,6 +592,20 @@ public class IRFunction extends GlobalValue {
         }
     }
 
+    public void LVN() {
+        while (true) {
+            boolean flag = true;
+            for (int i = 0; i < basicBlocks.size(); i++) {
+                if (basicBlocks.get(i).LVN()) {
+                    flag = false;
+                }
+            }
+            if (flag) {
+                break;
+            }
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

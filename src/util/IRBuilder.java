@@ -69,6 +69,7 @@ public class IRBuilder {
                 function.insertPhi();
                 function.deletePhi();
                 function.calSimplify();
+                function.LVN();
                 function.deleteDead();
                 function.deleteDead();
             }
