@@ -4,6 +4,9 @@ import llvm.Use;
 import llvm.type.Type;
 import llvm.value.BasicBlock;
 import llvm.value.Value;
+import util.Parser;
+
+import java.util.HashMap;
 
 public class CmpIns extends Instruction{
     private int cond;
@@ -63,5 +66,16 @@ public class CmpIns extends Instruction{
 
     public int getCondNum() {
         return cond;
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        Value v1 = oldValueToNew.getOrDefault(op1, op1);
+        Value v2 = oldValueToNew.getOrDefault(op2, op2);
+        CmpIns cmpIns = new CmpIns("", getType(), father, getOp(), getCond(), v1, v2);
+        oldValueToNew.put(this, cmpIns);
+        return cmpIns;
     }
 }

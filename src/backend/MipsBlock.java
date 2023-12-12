@@ -50,8 +50,7 @@ public class MipsBlock {
             if (BB.getFather().getParamNum() <= 4) {
                 for (int i = BB.getFather().getParamNum() - 1; i >= 0; i--) {
                     int temp = (BB.getFather().getParamNum() - 1 - i) * 2;
-                    if (IRBuilder.better &&
-                        BB.getInstructions().get(temp) instanceof AllocaIns allocaIns &&
+                    if (BB.getInstructions().get(temp) instanceof AllocaIns allocaIns &&
                         allocaIns.getDefType() instanceof IntegerType) {
                         StoreIns storeIns = (StoreIns) BB.getInstructions().get(temp + 1);
                         mipsFunction.register[i + 4] = true;
@@ -66,8 +65,7 @@ public class MipsBlock {
             } else {
                 for (int i = BB.getFather().getParamNum() - 1; i >= 4; i--) {
                     int temp = (BB.getFather().getParamNum() - 1 - i) * 2;
-                    if (IRBuilder.better &&
-                        BB.getInstructions().get(temp) instanceof AllocaIns allocaIns &&
+                    if (BB.getInstructions().get(temp) instanceof AllocaIns allocaIns &&
                         allocaIns.getDefType() instanceof IntegerType) {
                         StoreIns storeIns = (StoreIns) BB.getInstructions().get(temp + 1);
                         mipsFunction.stack.put(storeIns.getValue(), mipsFunction.stackP);
@@ -79,8 +77,7 @@ public class MipsBlock {
                 }
                 for (int i = 3; i >= 0; i--) {
                     int temp = (BB.getFather().getParamNum() - 1 - i) * 2;
-                    if (IRBuilder.better &&
-                        BB.getInstructions().get(temp) instanceof AllocaIns allocaIns &&
+                    if (BB.getInstructions().get(temp) instanceof AllocaIns allocaIns &&
                         allocaIns.getDefType() instanceof IntegerType) {
                         StoreIns storeIns = (StoreIns) BB.getInstructions().get(temp + 1);
                         mipsFunction.register[i + 4] = true;
@@ -303,18 +300,31 @@ public class MipsBlock {
                     }
                 } else {
                     if (storeIns.getValue() instanceof ConstInt constInt) {
-                        mipsIns = new MipsIns("li", 26, constInt.getValue());
-                        mipsInsList.add(mipsIns);
-                        mipsIns =
-                            new MipsIns("sw", 26, -mipsFunction.stack.get(storeIns.getPointer()),
-                                30);
-                        mipsInsList.add(mipsIns);
+                        if (mipsFunction.varToReg.containsKey(storeIns.getPointer())) {
+                            int regNum = alreadyHasReg(storeIns.getPointer());
+                            mipsIns = new MipsIns("li", regNum, constInt.getValue());
+                            mipsInsList.add(mipsIns);
+                        } else {
+                            mipsIns = new MipsIns("li", 26, constInt.getValue());
+                            mipsInsList.add(mipsIns);
+                            mipsIns =
+                                new MipsIns("sw", 26,
+                                    -mipsFunction.stack.get(storeIns.getPointer()),
+                                    30);
+                            mipsInsList.add(mipsIns);
+                        }
                     } else {
                         v = distributeReg(storeIns.getValue(), storeIns.getLocation());
-                        mipsIns =
-                            new MipsIns("sw", v, -mipsFunction.stack.get(storeIns.getPointer()),
-                                30);
-                        mipsInsList.add(mipsIns);
+                        if (mipsFunction.varToReg.containsKey(storeIns.getPointer())) {
+                            int regNum = alreadyHasReg(storeIns.getPointer());
+                            mipsIns = new MipsIns("move", regNum, v);
+                            mipsInsList.add(mipsIns);
+                        } else {
+                            mipsIns =
+                                new MipsIns("sw", v, -mipsFunction.stack.get(storeIns.getPointer()),
+                                    30);
+                            mipsInsList.add(mipsIns);
+                        }
                     }
                 }
             }
@@ -792,7 +802,6 @@ public class MipsBlock {
             mipsInsList.add(mipsIns);
         } else if (value instanceof GetIns getIns) {
             //将内存中数组地址加载进寄存器
-            System.out.println(getIns);
             mipsIns = new MipsIns("lw", regNum, -mipsFunction.stack.get(getIns), 30);
             mipsInsList.add(mipsIns);
         } else { //局部变量，包括局部数组，或者参数数组

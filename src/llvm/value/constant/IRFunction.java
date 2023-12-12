@@ -1,5 +1,6 @@
 package llvm.value.constant;
 
+import llvm.IRModule;
 import llvm.Use;
 import llvm.type.FunctionType;
 import llvm.type.IntegerType;
@@ -234,9 +235,9 @@ public class IRFunction extends GlobalValue {
             args.add(functionType.getParam(i));
         }
         for (int i = 0; i < inSet.size(); i++) {
-            for (Value v1 : inSet.get(i)) {
-                HashSet<Value> temp = new HashSet<>(inSet.get(i));
-                temp.addAll(basicBlocks.get(i).getDefined());
+            HashSet<Value> temp = new HashSet<>(inSet.get(i));
+            temp.addAll(basicBlocks.get(i).getDefined());
+            for (Value v1 : temp) {
                 for (Value v2 : temp) {
                     if (!valueToBB.containsKey(v2) || valueToBB.get(v2).size() < 2 ||
                         v1.equals(v2) || args.contains(v2)) {
@@ -571,6 +572,7 @@ public class IRFunction extends GlobalValue {
         for (int i = 0; i < phis.size(); i++) {
             phis.get(i).destroy();
             for (BasicBlock j : phis.get(i).getChoice().keySet()) {
+                Value v = phis.get(i).getChoice().get(j);
                 StoreIns storeIns = new StoreIns("", null, j, Operation.STORE,
                     phis.get(i).getChoice().get(j), allocas.get(i));
                 j.addEnd(storeIns);
@@ -604,6 +606,21 @@ public class IRFunction extends GlobalValue {
                 break;
             }
         }
+    }
+
+    public HashMap<String, Integer> callFunc() {
+        HashMap<String, Integer> calls = new HashMap<>();
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            HashMap<String, Integer> temp = basicBlocks.get(i).callFunc();
+            for (String name : temp.keySet()) {
+                if (!calls.containsKey(name)) {
+                    calls.put(name, 0);
+                }
+                int t = calls.get(name);
+                calls.put(name, t + 1);
+            }
+        }
+        return calls;
     }
 
     @Override
@@ -646,5 +663,106 @@ public class IRFunction extends GlobalValue {
 
     public HashMap<BasicBlock, HashSet<BasicBlock>> getDomTree() {
         return domTree;
+    }
+
+    public ArrayList<BasicBlock> inLine(CallIns callIns, BasicBlock nextBB) {
+        ArrayList<BasicBlock> newBasicBlock;
+        AllocaIns allocaIns = null;
+        if (callIns == null) {
+            newBasicBlock = basicBlocks;
+        } else {
+            newBasicBlock = clone(callIns);
+            if (callIns.getType() instanceof IntegerType) {
+                allocaIns = new AllocaIns("", new PointerType(new IntegerType(32)),
+                    newBasicBlock.get(0), Operation.ALLOCA, false);
+                newBasicBlock.get(0).addEnd(allocaIns);
+            }
+        }
+        for (int i = 0; i < newBasicBlock.size(); i++) {
+            for (int j = 0; j < newBasicBlock.get(i).getInstructions().size(); j++) {
+                Instruction ins = newBasicBlock.get(i).getInstructions().get(j);
+                if (ins instanceof CallIns call &&
+                    IRModule.noneRecursive.contains(call.getFunc())) {
+                    BasicBlock newBB = new BasicBlock("", null, this);
+                    //递归内联子函数
+                    ArrayList<BasicBlock> temp = call.getFunc().inLine(call, newBB);
+                    //将call改为br
+                    BrIns brIns =
+                        new BrIns("", null, newBasicBlock.get(i), Operation.BR, temp.get(0));
+                    newBasicBlock.get(i).getInstructions().set(j, brIns);
+                    //将此BB的剩余指令加入到newBB中
+                    for (int k = j + 1; k < newBasicBlock.get(i).getInstructions().size(); k++) {
+                        newBB.addIns(newBasicBlock.get(i).getInstructions().get(k));
+                        newBasicBlock.get(i).getInstructions().get(k).setParent(newBB);
+                    }
+                    //插入内联的blocks
+                    for (int k = i + 1; k < temp.size() + i + 1; k++) {
+                        newBasicBlock.add(k, temp.get(k - i - 1));
+                    }
+                    //插入newBB
+                    newBasicBlock.add(i + 1 + temp.size(), newBB);
+                    //删除call后的代码
+                    for (int k = j + 1; k < newBasicBlock.get(i).getInstructions().size(); k++) {
+                        newBasicBlock.get(i).getInstructions().remove(k);
+                        k--;
+                    }
+                    //重新遍历basicBlocks.get(i)
+                    i--;
+                    break;
+                } else if (ins instanceof RetIns retIns) {
+                    if (callIns == null) {
+                        continue;
+                    }
+                    if (retIns.getValue() != null) {
+                        StoreIns storeIns = new StoreIns("", null, newBasicBlock.get(i),
+                            Operation.STORE, retIns.getValue(), allocaIns);
+                        newBasicBlock.get(i).getInstructions().set(j, storeIns);
+                        BrIns brIns =
+                            new BrIns("", null, newBasicBlock.get(i), Operation.BR, nextBB);
+                        retIns.destroy();
+                        newBasicBlock.get(i).getInstructions().add(j + 1, brIns);
+                    } else {
+                        BrIns brIns =
+                            new BrIns("", null, newBasicBlock.get(i), Operation.BR, nextBB);
+                        retIns.destroy();
+                        newBasicBlock.get(i).getInstructions().set(j, brIns);
+                    }
+                }
+            }
+        }
+        if (allocaIns != null) {
+            LoadIns loadIns =
+                new LoadIns("", new IntegerType(32), nextBB, Operation.LOAD, allocaIns);
+            nextBB.addIns(loadIns);
+            callIns.replaceUsed(loadIns);
+        }
+        if (callIns != null) {
+            callIns.destroy();
+        }
+        return newBasicBlock;
+    }
+
+    private ArrayList<BasicBlock> clone(CallIns callIns) {
+        ArrayList<BasicBlock> temp = new ArrayList<>();
+        HashMap<BasicBlock, BasicBlock> oldBBToNew = new HashMap<>();
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            temp.add(new BasicBlock("", null, callIns.getParent().getFather()));
+            oldBBToNew.put(basicBlocks.get(i), temp.get(i));
+        }
+        HashMap<Value, Value> oldValueToNew = new HashMap<>();
+        for (int i = 0; i < callIns.getFunc().getParamNum(); i++) {
+            oldValueToNew.put(callIns.getFunc().getFunctionType().getParam(i),
+                callIns.getRealParams().get(i));
+        }
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            for (Instruction ins : basicBlocks.get(i).getInstructions()) {
+                temp.get(i).addIns(ins.clone(oldBBToNew, oldValueToNew));
+            }
+        }
+        return temp;
+    }
+
+    public FunctionType getFunctionType() {
+        return functionType;
     }
 }

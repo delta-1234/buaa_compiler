@@ -461,4 +461,24 @@ public class BasicBlock extends Value {
         }
         return temp;
     }
+
+    public HashMap<String, Integer> callFunc() {
+        HashMap<String, Integer> calls = new HashMap<>();
+        for (int i = 0; i < instructions.size(); i++) {
+            if (!(instructions.get(i) instanceof CallIns callIns)) {
+                continue;
+            }
+            if (callIns.getFunc().getName().equals("putint") ||
+                callIns.getFunc().getName().equals("putch") ||
+                callIns.getFunc().getName().equals("getint")) {
+                continue;
+            }
+            if (!calls.containsKey(callIns.getFunc().getName())) {
+                calls.put(callIns.getFunc().getName(), 0);
+            }
+            int t = calls.get(callIns.getFunc().getName());
+            calls.put(callIns.getFunc().getName(), t + 1);
+        }
+        return calls;
+    }
 }

@@ -1,10 +1,12 @@
 package llvm.value.instruction;
 
 import llvm.Use;
+import llvm.type.IntegerType;
 import llvm.type.Type;
 import llvm.value.BasicBlock;
 import llvm.value.Value;
-import llvm.value.constant.ConstInt;
+
+import java.util.HashMap;
 
 public class CalculateIns extends Instruction {
     private Value op1;
@@ -58,5 +60,16 @@ public class CalculateIns extends Instruction {
         } else {
             return 5;
         }
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        Value v1 = oldValueToNew.getOrDefault(op1, op1);
+        Value v2 = oldValueToNew.getOrDefault(op2, op2);
+        CalculateIns calIns = new CalculateIns("", getType(), father, getOp(), v1, v2);
+        oldValueToNew.put(this, calIns);
+        return calIns;
     }
 }

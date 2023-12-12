@@ -1,89 +1,99 @@
-
-
-const int c_common = 10, c_array[3] = {1, 2, 3};
-const int  c_matrix[3][3] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
-int v_common, v_array[3], v_matrix[3][3];
-int v_commonInit = 10;
-int v_arrayInit[3] = {1, 2, 3};
-int v_matrixInit[3][3] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
-
-
-
-void print(int output) {
-    printf("\nf2() flag : %d", output);
+const int p = 88;
+int q = 66, r = 155;
+int s = 15;
+int max(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+    return a;
+}
+int min(int a, int b) {
+    if (a < b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+    return a;
+}
+int scan() {
+    int tmp = 0;
+    tmp = getint();
+    return tmp + 0;
+}
+void print(int num) {
+    printf("%d\n", num);
     return;
 }
-
-int f0() {
-	return 1;
+void noUse(int a) {
+    int b = a;
 }
-
-int f1(int a[], int b[][3], int c[]) {
-    return a[0] + b[0][0] + c[0];
+int mid(int a, int b, int c) {
+    int m = 0;
+    if (max(a, b) == min(b, c)) {
+        return b;
+    }
+    else {
+        if (max(a, b) != min(a, c))
+            return c;
+        else
+            return a;
+    }
+    return b;
 }
-
-int f2(int a, int b) {
-    int c;
-    int flag;
-    int a1[2] = {1, 2};
-    int a2[3][3] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
-    c = -(a*b) + a/b + (a%b) -1 + f1(a1, a2, a2[0]) - +f0();
-
-    if (a > 10 && b > 10) {
-        print(1);
-        flag = 0;
+int factorial(int n) {
+    int i = n;
+    int ret = 1;
+    if (n > 20) {
+        printf("Your Num is too Big!!!\n");
+        return -1;
     }
-    if (a > 10 && b <= 10) {
-        print(2);
-        flag = 0;
+    for (;i;) {
+        ret = ret * i;
+        i = i - 1;
     }
-    if (a <= 10 && b <= 10) {
-        print(3);
-        flag = 1;
-    }
-    if (a <= 10 && b > 10) {
-        print(4);
-        flag = 1;
-    }
-    return flag;
+    return ret;
 }
-
 int main() {
+    int a = max(min(p, q), max(s, scan()));
+    int b = min(r, scan()), c = 58;
+    const int d = 65535;
+    int bool1 = 0, bool2 = 1, bool3 = -1;
+    int tmp = -10;
+    printf("19373022\n");
+    printf("%d,%d\n",a,b);
+    b = b + c - a;
+    printf("b:%d\n", b);
     ;
-    {
-	}
-    int a,b,flag1,flag2,flag,i;
-    a = getint();
-    b = getint();
-    i=0;
-    if (a != b) {
-        for (;i < 3;) {
-            int c1;
-            int c2;
-            c1 = a + b;
-            c2 = a - b;
-            
-            flag1=f2(c1,c2);
-            flag2=f2(c2,c1);
-			
-            if (flag1 == 0 || !flag2) {
-                flag = 0;
-            } else {
-                flag = 1;
-            }
-			printf("\nflag = %d : c1 = %d, c2 = %d", flag, c1, c2);
-            i = i + 1;
-            a = a + 5;
-            b = b + 5;
-            if (i >= 10) {
-                continue;
-            }
-            if (i < 0) {
-                break;
-            }
+    (bool2 + bool3);
+    bool1;
+    if (!bool1) {
+        printf("Bool1 is false!\n");
+    }
+    2147483647;
+    {    
+        int tmp = 0;
+        tmp = scan();
+        print(tmp + 10);
+        c = tmp;
+    }
+    a = scan();
+    b = scan();
+    c = scan();
+    if (mid(a, b, c) <= a) {
+        printf("Good!,Num is %d\n", a + mid(a, b, c) / 6 * c % 2 - (bool1 * bool3));
+    }
+    else {
+        if (mid(a, b, c) < c) {
+            printf("Oh!?\n");
+        }
+        else {
+            printf("%d\n", factorial(mid(a, b, c) % d));
         }
     }
+    noUse(a);
     return 0;
 }
-
-

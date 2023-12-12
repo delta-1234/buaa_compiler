@@ -1,5 +1,15 @@
 package util;
 
+import front.parser.CompUnit;
+import front.parser.Decl.ConstDef;
+import front.parser.Decl.Decl;
+import front.parser.Decl.VarDef;
+import front.parser.Exp.ConstExp;
+import front.parser.FuncDef.FuncDef;
+import front.parser.FuncDef.FuncFParams;
+import front.parser.Init.ConstInitVal;
+import front.parser.Init.InitVal;
+import front.parser.MainFuncDef;
 import llvm.IRModule;
 import llvm.type.ArrayType;
 import llvm.type.FunctionType;
@@ -17,23 +27,13 @@ import llvm.value.instruction.GetIns;
 import llvm.value.instruction.Instruction;
 import llvm.value.instruction.Operation;
 import llvm.value.instruction.StoreIns;
-import front.parser.CompUnit;
-import front.parser.Decl.ConstDef;
-import front.parser.Decl.Decl;
-import front.parser.Decl.VarDef;
-import front.parser.Exp.ConstExp;
-import front.parser.FuncDef.FuncDef;
-import front.parser.FuncDef.FuncFParams;
-import front.parser.Init.ConstInitVal;
-import front.parser.Init.InitVal;
-import front.parser.MainFuncDef;
 
 import java.util.ArrayList;
 
 public class IRBuilder {
     private static CompUnit compUnit = Parser.compUnit;
     public static IRModule module = new IRModule();
-    public static boolean better = true;
+    public static boolean inLine = true;
 
     public static void buildIR() {
         buildModule();
@@ -62,17 +62,24 @@ public class IRBuilder {
         buildFunc(compUnit.getMainFuncDef());
         module.getSymbolTable().deleteTable();
         module.setCertain();
-        if (better) {
-            for (IRFunction function : module.getFunctions()) {
-                function.deleteDead();
-                function.buildCFG();
-                function.insertPhi();
-                function.deletePhi();
-                function.calSimplify();
-                function.LVN();
-                function.deleteDead();
-                function.deleteDead();
-            }
+        for (IRFunction function : module.getFunctions()) {
+            function.deleteDead();
+        }
+    }
+
+    public static void better() {
+        if (inLine) {
+            module.funcInLine();
+        }
+        for (IRFunction function : module.getFunctions()) {
+            function.deleteDead();
+            function.buildCFG();
+            function.insertPhi();
+            function.deletePhi();
+            function.calSimplify();
+            function.LVN();
+            function.deleteDead();
+            function.deleteDead();
         }
     }
 
@@ -137,7 +144,8 @@ public class IRBuilder {
             return;
         }
         Instruction temp =
-            new AllocaIns(varDef.getIdent(), new PointerType(integerType), BB, Operation.ALLOCA, false);
+            new AllocaIns(varDef.getIdent(), new PointerType(integerType), BB, Operation.ALLOCA,
+                false);
         BB.addIns(temp);
         module.getSymbolTable().addSymbol(temp);
         if (varDef.getInitVal() == null) {
@@ -163,7 +171,8 @@ public class IRBuilder {
             return;
         }
         Instruction ins =
-            new AllocaIns(constDef.getIdent(), new PointerType(arrayType), BB, Operation.ALLOCA, true);
+            new AllocaIns(constDef.getIdent(), new PointerType(arrayType), BB, Operation.ALLOCA,
+                true);
         BB.addIns(ins);
         module.getSymbolTable().addSymbol(ins);
         arrayInit(ins, constDef.getConstInitVal(), new ArrayList<Integer>(), BB);
@@ -186,7 +195,8 @@ public class IRBuilder {
             return;
         }
         Instruction ins =
-            new AllocaIns(varDef.getIdent(), new PointerType(arrayType), BB, Operation.ALLOCA, false);
+            new AllocaIns(varDef.getIdent(), new PointerType(arrayType), BB, Operation.ALLOCA,
+                false);
         BB.addIns(ins);
         module.getSymbolTable().addSymbol(ins);
         if (varDef.getInitVal() != null) {
@@ -341,5 +351,4 @@ public class IRBuilder {
         Parser.parseBlock(mainFuncDef.getBlock(), BB, null, null);
         module.getSymbolTable().deleteTable();
     }
-
 }

@@ -5,12 +5,15 @@ import llvm.type.Type;
 import llvm.value.BasicBlock;
 import llvm.value.Value;
 
+import java.util.HashMap;
+
 public class BrIns extends Instruction {
     private Value value;
     private BasicBlock trueBB;
     private BasicBlock falseBB;
     private BasicBlock dest;
     private static int count = 0;
+
     //br i1 <cond>, label <iftrue>, label <iffalse>
     //br label <dest>
     public BrIns(String name, Type type, BasicBlock basicBlock, Operation op,
@@ -102,5 +105,20 @@ public class BrIns extends Instruction {
         }
         trueBB = null;
         falseBB = null;
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BrIns brIns;
+        BasicBlock father = oldBBToNew.get(getParent());
+        if (dest != null) {
+            brIns = new BrIns("", null, father, getOp(), oldBBToNew.get(dest));
+        } else {
+            Value newValue = oldValueToNew.getOrDefault(value, value);
+            brIns = new BrIns("", null, father, getOp(), newValue, oldBBToNew.get(trueBB),
+                oldBBToNew.get(falseBB));
+        }
+        return brIns;
     }
 }

@@ -3,161 +3,203 @@ source_filename = "main.c"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@c_common = dso_local constant i32 10, align 4
-@c_array = dso_local constant [3 x i32] [i32 1, i32 2, i32 3], align 4
-@c_matrix = dso_local constant [3 x [3 x i32]] [[3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 1, i32 2, i32 3]], align 16
-@v_commonInit = dso_local global i32 10, align 4
-@v_arrayInit = dso_local global [3 x i32] [i32 1, i32 2, i32 3], align 4
-@v_matrixInit = dso_local global [3 x [3 x i32]] [[3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 1, i32 2, i32 3]], align 16
-@.str = private unnamed_addr constant [16 x i8] c"\0Af2() flag : %d\00", align 1
-@__const.f2.a1 = private unnamed_addr constant [2 x i32] [i32 1, i32 2], align 4
-@__const.f2.a2 = private unnamed_addr constant [3 x [3 x i32]] [[3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 1, i32 2, i32 3], [3 x i32] [i32 1, i32 2, i32 3]], align 16
-@.str.1 = private unnamed_addr constant [30 x i8] c"\0Aflag = %d : c1 = %d, c2 = %d\00", align 1
-@v_common = dso_local global i32 0, align 4
-@v_array = dso_local global [3 x i32] zeroinitializer, align 4
-@v_matrix = dso_local global [3 x [3 x i32]] zeroinitializer, align 16
+@p = dso_local constant i32 88, align 4
+@q = dso_local global i32 66, align 4
+@r = dso_local global i32 155, align 4
+@s = dso_local global i32 15, align 4
+@.str = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.1 = private unnamed_addr constant [24 x i8] c"Your Num is too Big!!!\0A\00", align 1
+@.str.2 = private unnamed_addr constant [10 x i8] c"19373022\0A\00", align 1
+@.str.3 = private unnamed_addr constant [7 x i8] c"%d,%d\0A\00", align 1
+@.str.4 = private unnamed_addr constant [6 x i8] c"b:%d\0A\00", align 1
+@.str.5 = private unnamed_addr constant [17 x i8] c"Bool1 is false!\0A\00", align 1
+@.str.6 = private unnamed_addr constant [17 x i8] c"Good!,Num is %d\0A\00", align 1
+@.str.7 = private unnamed_addr constant [6 x i8] c"Oh!?\0A\00", align 1
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @max(i32 noundef %0, i32 noundef %1) #0 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i32, align 4
+  store i32 %0, i32* %4, align 4
+  store i32 %1, i32* %5, align 4
+  %6 = load i32, i32* %4, align 4
+  %7 = load i32, i32* %5, align 4
+  %8 = icmp sgt i32 %6, %7
+  br i1 %8, label %9, label %11
+
+9:                                                ; preds = %2
+  %10 = load i32, i32* %4, align 4
+  store i32 %10, i32* %3, align 4
+  br label %13
+
+11:                                               ; preds = %2
+  %12 = load i32, i32* %5, align 4
+  store i32 %12, i32* %3, align 4
+  br label %13
+
+13:                                               ; preds = %11, %9
+  %14 = load i32, i32* %3, align 4
+  ret i32 %14
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @min(i32 noundef %0, i32 noundef %1) #0 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i32, align 4
+  store i32 %0, i32* %4, align 4
+  store i32 %1, i32* %5, align 4
+  %6 = load i32, i32* %4, align 4
+  %7 = load i32, i32* %5, align 4
+  %8 = icmp slt i32 %6, %7
+  br i1 %8, label %9, label %11
+
+9:                                                ; preds = %2
+  %10 = load i32, i32* %4, align 4
+  store i32 %10, i32* %3, align 4
+  br label %13
+
+11:                                               ; preds = %2
+  %12 = load i32, i32* %5, align 4
+  store i32 %12, i32* %3, align 4
+  br label %13
+
+13:                                               ; preds = %11, %9
+  %14 = load i32, i32* %3, align 4
+  ret i32 %14
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @scan() #0 {
+  %1 = alloca i32, align 4
+  store i32 0, i32* %1, align 4
+  %2 = call i32 (...) @getint()
+  store i32 %2, i32* %1, align 4
+  %3 = load i32, i32* %1, align 4
+  %4 = add nsw i32 %3, 0
+  ret i32 %4
+}
+
+declare i32 @getint(...) #1
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local void @print(i32 noundef %0) #0 {
   %2 = alloca i32, align 4
   store i32 %0, i32* %2, align 4
   %3 = load i32, i32* %2, align 4
-  %4 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([16 x i8], [16 x i8]* @.str, i64 0, i64 0), i32 noundef %3)
+  %4 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i64 0, i64 0), i32 noundef %3)
   ret void
 }
 
 declare i32 @printf(i8* noundef, ...) #1
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local i32 @f0() #0 {
-  ret i32 1
-}
-
-; Function Attrs: noinline nounwind optnone uwtable
-define dso_local i32 @f1(i32* noundef %0, [3 x i32]* noundef %1, i32* noundef %2) #0 {
-  %4 = alloca i32*, align 8
-  %5 = alloca [3 x i32]*, align 8
-  %6 = alloca i32*, align 8
-  store i32* %0, i32** %4, align 8
-  store [3 x i32]* %1, [3 x i32]** %5, align 8
-  store i32* %2, i32** %6, align 8
-  %7 = load i32*, i32** %4, align 8
-  %8 = getelementptr inbounds i32, i32* %7, i64 0
-  %9 = load i32, i32* %8, align 4
-  %10 = load [3 x i32]*, [3 x i32]** %5, align 8
-  %11 = getelementptr inbounds [3 x i32], [3 x i32]* %10, i64 0
-  %12 = getelementptr inbounds [3 x i32], [3 x i32]* %11, i64 0, i64 0
-  %13 = load i32, i32* %12, align 4
-  %14 = add nsw i32 %9, %13
-  %15 = load i32*, i32** %6, align 8
-  %16 = getelementptr inbounds i32, i32* %15, i64 0
-  %17 = load i32, i32* %16, align 4
-  %18 = add nsw i32 %14, %17
-  ret i32 %18
-}
-
-; Function Attrs: noinline nounwind optnone uwtable
-define dso_local i32 @f2(i32 noundef %0, i32 noundef %1) #0 {
+define dso_local void @noUse(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
   %3 = alloca i32, align 4
+  store i32 %0, i32* %2, align 4
+  %4 = load i32, i32* %2, align 4
+  store i32 %4, i32* %3, align 4
+  ret void
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @mid(i32 noundef %0, i32 noundef %1, i32 noundef %2) #0 {
   %4 = alloca i32, align 4
   %5 = alloca i32, align 4
   %6 = alloca i32, align 4
-  %7 = alloca [2 x i32], align 4
-  %8 = alloca [3 x [3 x i32]], align 16
-  store i32 %0, i32* %3, align 4
-  store i32 %1, i32* %4, align 4
-  %9 = bitcast [2 x i32]* %7 to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 4 %9, i8* align 4 bitcast ([2 x i32]* @__const.f2.a1 to i8*), i64 8, i1 false)
-  %10 = bitcast [3 x [3 x i32]]* %8 to i8*
-  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 16 %10, i8* align 16 bitcast ([3 x [3 x i32]]* @__const.f2.a2 to i8*), i64 36, i1 false)
-  %11 = load i32, i32* %3, align 4
-  %12 = load i32, i32* %4, align 4
-  %13 = mul nsw i32 %11, %12
-  %14 = sub nsw i32 0, %13
-  %15 = load i32, i32* %3, align 4
-  %16 = load i32, i32* %4, align 4
-  %17 = sdiv i32 %15, %16
-  %18 = add nsw i32 %14, %17
-  %19 = load i32, i32* %3, align 4
-  %20 = load i32, i32* %4, align 4
-  %21 = srem i32 %19, %20
-  %22 = add nsw i32 %18, %21
-  %23 = sub nsw i32 %22, 1
-  %24 = getelementptr inbounds [2 x i32], [2 x i32]* %7, i64 0, i64 0
-  %25 = getelementptr inbounds [3 x [3 x i32]], [3 x [3 x i32]]* %8, i64 0, i64 0
-  %26 = getelementptr inbounds [3 x [3 x i32]], [3 x [3 x i32]]* %8, i64 0, i64 0
-  %27 = getelementptr inbounds [3 x i32], [3 x i32]* %26, i64 0, i64 0
-  %28 = call i32 @f1(i32* noundef %24, [3 x i32]* noundef %25, i32* noundef %27)
-  %29 = add nsw i32 %23, %28
-  %30 = call i32 @f0()
-  %31 = sub nsw i32 %29, %30
-  store i32 %31, i32* %5, align 4
-  %32 = load i32, i32* %3, align 4
-  %33 = icmp sgt i32 %32, 10
-  br i1 %33, label %34, label %38
+  %7 = alloca i32, align 4
+  %8 = alloca i32, align 4
+  store i32 %0, i32* %5, align 4
+  store i32 %1, i32* %6, align 4
+  store i32 %2, i32* %7, align 4
+  store i32 0, i32* %8, align 4
+  %9 = load i32, i32* %5, align 4
+  %10 = load i32, i32* %6, align 4
+  %11 = call i32 @max(i32 noundef %9, i32 noundef %10)
+  %12 = load i32, i32* %6, align 4
+  %13 = load i32, i32* %7, align 4
+  %14 = call i32 @min(i32 noundef %12, i32 noundef %13)
+  %15 = icmp eq i32 %11, %14
+  br i1 %15, label %16, label %18
 
-34:                                               ; preds = %2
-  %35 = load i32, i32* %4, align 4
-  %36 = icmp sgt i32 %35, 10
-  br i1 %36, label %37, label %38
+16:                                               ; preds = %3
+  %17 = load i32, i32* %6, align 4
+  store i32 %17, i32* %4, align 4
+  br label %30
 
-37:                                               ; preds = %34
-  call void @print(i32 noundef 1)
-  store i32 0, i32* %6, align 4
-  br label %38
+18:                                               ; preds = %3
+  %19 = load i32, i32* %5, align 4
+  %20 = load i32, i32* %6, align 4
+  %21 = call i32 @max(i32 noundef %19, i32 noundef %20)
+  %22 = load i32, i32* %5, align 4
+  %23 = load i32, i32* %7, align 4
+  %24 = call i32 @min(i32 noundef %22, i32 noundef %23)
+  %25 = icmp ne i32 %21, %24
+  br i1 %25, label %26, label %28
 
-38:                                               ; preds = %37, %34, %2
-  %39 = load i32, i32* %3, align 4
-  %40 = icmp sgt i32 %39, 10
-  br i1 %40, label %41, label %45
+26:                                               ; preds = %18
+  %27 = load i32, i32* %7, align 4
+  store i32 %27, i32* %4, align 4
+  br label %30
 
-41:                                               ; preds = %38
-  %42 = load i32, i32* %4, align 4
-  %43 = icmp sle i32 %42, 10
-  br i1 %43, label %44, label %45
+28:                                               ; preds = %18
+  %29 = load i32, i32* %5, align 4
+  store i32 %29, i32* %4, align 4
+  br label %30
 
-44:                                               ; preds = %41
-  call void @print(i32 noundef 2)
-  store i32 0, i32* %6, align 4
-  br label %45
-
-45:                                               ; preds = %44, %41, %38
-  %46 = load i32, i32* %3, align 4
-  %47 = icmp sle i32 %46, 10
-  br i1 %47, label %48, label %52
-
-48:                                               ; preds = %45
-  %49 = load i32, i32* %4, align 4
-  %50 = icmp sle i32 %49, 10
-  br i1 %50, label %51, label %52
-
-51:                                               ; preds = %48
-  call void @print(i32 noundef 3)
-  store i32 1, i32* %6, align 4
-  br label %52
-
-52:                                               ; preds = %51, %48, %45
-  %53 = load i32, i32* %3, align 4
-  %54 = icmp sle i32 %53, 10
-  br i1 %54, label %55, label %59
-
-55:                                               ; preds = %52
-  %56 = load i32, i32* %4, align 4
-  %57 = icmp sgt i32 %56, 10
-  br i1 %57, label %58, label %59
-
-58:                                               ; preds = %55
-  call void @print(i32 noundef 4)
-  store i32 1, i32* %6, align 4
-  br label %59
-
-59:                                               ; preds = %58, %55, %52
-  %60 = load i32, i32* %6, align 4
-  ret i32 %60
+30:                                               ; preds = %28, %26, %16
+  %31 = load i32, i32* %4, align 4
+  ret i32 %31
 }
 
-; Function Attrs: argmemonly nofree nounwind willreturn
-declare void @llvm.memcpy.p0i8.p0i8.i64(i8* noalias nocapture writeonly, i8* noalias nocapture readonly, i64, i1 immarg) #2
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @factorial(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i32, align 4
+  store i32 %0, i32* %3, align 4
+  %6 = load i32, i32* %3, align 4
+  store i32 %6, i32* %4, align 4
+  store i32 1, i32* %5, align 4
+  %7 = load i32, i32* %3, align 4
+  %8 = icmp sgt i32 %7, 20
+  br i1 %8, label %9, label %11
+
+9:                                                ; preds = %1
+  %10 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([24 x i8], [24 x i8]* @.str.1, i64 0, i64 0))
+  store i32 -1, i32* %2, align 4
+  br label %23
+
+11:                                               ; preds = %1
+  br label %12
+
+12:                                               ; preds = %15, %11
+  %13 = load i32, i32* %4, align 4
+  %14 = icmp ne i32 %13, 0
+  br i1 %14, label %15, label %21
+
+15:                                               ; preds = %12
+  %16 = load i32, i32* %5, align 4
+  %17 = load i32, i32* %4, align 4
+  %18 = mul nsw i32 %16, %17
+  store i32 %18, i32* %5, align 4
+  %19 = load i32, i32* %4, align 4
+  %20 = sub nsw i32 %19, 1
+  store i32 %20, i32* %4, align 4
+  br label %12, !llvm.loop !6
+
+21:                                               ; preds = %12
+  %22 = load i32, i32* %5, align 4
+  store i32 %22, i32* %2, align 4
+  br label %23
+
+23:                                               ; preds = %21, %9
+  %24 = load i32, i32* %2, align 4
+  ret i32 %24
+}
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i32 @main() #0 {
@@ -170,103 +212,124 @@ define dso_local i32 @main() #0 {
   %7 = alloca i32, align 4
   %8 = alloca i32, align 4
   %9 = alloca i32, align 4
+  %10 = alloca i32, align 4
   store i32 0, i32* %1, align 4
-  %10 = call i32 (...) @getint()
-  store i32 %10, i32* %2, align 4
-  %11 = call i32 (...) @getint()
-  store i32 %11, i32* %3, align 4
-  store i32 0, i32* %7, align 4
-  %12 = load i32, i32* %2, align 4
-  %13 = load i32, i32* %3, align 4
-  %14 = icmp ne i32 %12, %13
-  br i1 %14, label %15, label %59
-
-15:                                               ; preds = %0
-  br label %16
-
-16:                                               ; preds = %57, %52, %15
-  %17 = load i32, i32* %7, align 4
-  %18 = icmp slt i32 %17, 3
-  br i1 %18, label %19, label %58
-
-19:                                               ; preds = %16
-  %20 = load i32, i32* %2, align 4
-  %21 = load i32, i32* %3, align 4
-  %22 = add nsw i32 %20, %21
-  store i32 %22, i32* %8, align 4
-  %23 = load i32, i32* %2, align 4
-  %24 = load i32, i32* %3, align 4
-  %25 = sub nsw i32 %23, %24
-  store i32 %25, i32* %9, align 4
-  %26 = load i32, i32* %8, align 4
-  %27 = load i32, i32* %9, align 4
-  %28 = call i32 @f2(i32 noundef %26, i32 noundef %27)
-  store i32 %28, i32* %4, align 4
-  %29 = load i32, i32* %9, align 4
-  %30 = load i32, i32* %8, align 4
-  %31 = call i32 @f2(i32 noundef %29, i32 noundef %30)
-  store i32 %31, i32* %5, align 4
-  %32 = load i32, i32* %4, align 4
-  %33 = icmp eq i32 %32, 0
-  br i1 %33, label %37, label %34
-
-34:                                               ; preds = %19
-  %35 = load i32, i32* %5, align 4
-  %36 = icmp ne i32 %35, 0
-  br i1 %36, label %38, label %37
-
-37:                                               ; preds = %34, %19
+  %11 = load i32, i32* @q, align 4
+  %12 = call i32 @min(i32 noundef 88, i32 noundef %11)
+  %13 = load i32, i32* @s, align 4
+  %14 = call i32 @scan()
+  %15 = call i32 @max(i32 noundef %13, i32 noundef %14)
+  %16 = call i32 @max(i32 noundef %12, i32 noundef %15)
+  store i32 %16, i32* %2, align 4
+  %17 = load i32, i32* @r, align 4
+  %18 = call i32 @scan()
+  %19 = call i32 @min(i32 noundef %17, i32 noundef %18)
+  store i32 %19, i32* %3, align 4
+  store i32 58, i32* %4, align 4
+  store i32 65535, i32* %5, align 4
   store i32 0, i32* %6, align 4
+  store i32 1, i32* %7, align 4
+  store i32 -1, i32* %8, align 4
+  store i32 -10, i32* %9, align 4
+  %20 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([10 x i8], [10 x i8]* @.str.2, i64 0, i64 0))
+  %21 = load i32, i32* %2, align 4
+  %22 = load i32, i32* %3, align 4
+  %23 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([7 x i8], [7 x i8]* @.str.3, i64 0, i64 0), i32 noundef %21, i32 noundef %22)
+  %24 = load i32, i32* %3, align 4
+  %25 = load i32, i32* %4, align 4
+  %26 = add nsw i32 %24, %25
+  %27 = load i32, i32* %2, align 4
+  %28 = sub nsw i32 %26, %27
+  store i32 %28, i32* %3, align 4
+  %29 = load i32, i32* %3, align 4
+  %30 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([6 x i8], [6 x i8]* @.str.4, i64 0, i64 0), i32 noundef %29)
+  %31 = load i32, i32* %7, align 4
+  %32 = load i32, i32* %8, align 4
+  %33 = add nsw i32 %31, %32
+  %34 = load i32, i32* %6, align 4
+  %35 = load i32, i32* %6, align 4
+  %36 = icmp ne i32 %35, 0
+  br i1 %36, label %39, label %37
+
+37:                                               ; preds = %0
+  %38 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([17 x i8], [17 x i8]* @.str.5, i64 0, i64 0))
   br label %39
 
-38:                                               ; preds = %34
-  store i32 1, i32* %6, align 4
-  br label %39
-
-39:                                               ; preds = %38, %37
-  %40 = load i32, i32* %6, align 4
-  %41 = load i32, i32* %8, align 4
-  %42 = load i32, i32* %9, align 4
-  %43 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([30 x i8], [30 x i8]* @.str.1, i64 0, i64 0), i32 noundef %40, i32 noundef %41, i32 noundef %42)
-  %44 = load i32, i32* %7, align 4
-  %45 = add nsw i32 %44, 1
-  store i32 %45, i32* %7, align 4
-  %46 = load i32, i32* %2, align 4
-  %47 = add nsw i32 %46, 5
-  store i32 %47, i32* %2, align 4
+39:                                               ; preds = %37, %0
+  store i32 0, i32* %10, align 4
+  %40 = call i32 @scan()
+  store i32 %40, i32* %10, align 4
+  %41 = load i32, i32* %10, align 4
+  %42 = add nsw i32 %41, 10
+  call void @print(i32 noundef %42)
+  %43 = load i32, i32* %10, align 4
+  store i32 %43, i32* %4, align 4
+  %44 = call i32 @scan()
+  store i32 %44, i32* %2, align 4
+  %45 = call i32 @scan()
+  store i32 %45, i32* %3, align 4
+  %46 = call i32 @scan()
+  store i32 %46, i32* %4, align 4
+  %47 = load i32, i32* %2, align 4
   %48 = load i32, i32* %3, align 4
-  %49 = add nsw i32 %48, 5
-  store i32 %49, i32* %3, align 4
-  %50 = load i32, i32* %7, align 4
-  %51 = icmp sge i32 %50, 10
-  br i1 %51, label %52, label %53
-
-52:                                               ; preds = %39
-  br label %16, !llvm.loop !6
+  %49 = load i32, i32* %4, align 4
+  %50 = call i32 @mid(i32 noundef %47, i32 noundef %48, i32 noundef %49)
+  %51 = load i32, i32* %2, align 4
+  %52 = icmp sle i32 %50, %51
+  br i1 %52, label %53, label %69
 
 53:                                               ; preds = %39
-  %54 = load i32, i32* %7, align 4
-  %55 = icmp slt i32 %54, 0
-  br i1 %55, label %56, label %57
+  %54 = load i32, i32* %2, align 4
+  %55 = load i32, i32* %2, align 4
+  %56 = load i32, i32* %3, align 4
+  %57 = load i32, i32* %4, align 4
+  %58 = call i32 @mid(i32 noundef %55, i32 noundef %56, i32 noundef %57)
+  %59 = sdiv i32 %58, 6
+  %60 = load i32, i32* %4, align 4
+  %61 = mul nsw i32 %59, %60
+  %62 = srem i32 %61, 2
+  %63 = add nsw i32 %54, %62
+  %64 = load i32, i32* %6, align 4
+  %65 = load i32, i32* %8, align 4
+  %66 = mul nsw i32 %64, %65
+  %67 = sub nsw i32 %63, %66
+  %68 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([17 x i8], [17 x i8]* @.str.6, i64 0, i64 0), i32 noundef %67)
+  br label %87
 
-56:                                               ; preds = %53
-  br label %58
+69:                                               ; preds = %39
+  %70 = load i32, i32* %2, align 4
+  %71 = load i32, i32* %3, align 4
+  %72 = load i32, i32* %4, align 4
+  %73 = call i32 @mid(i32 noundef %70, i32 noundef %71, i32 noundef %72)
+  %74 = load i32, i32* %4, align 4
+  %75 = icmp slt i32 %73, %74
+  br i1 %75, label %76, label %78
 
-57:                                               ; preds = %53
-  br label %16, !llvm.loop !6
+76:                                               ; preds = %69
+  %77 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([6 x i8], [6 x i8]* @.str.7, i64 0, i64 0))
+  br label %86
 
-58:                                               ; preds = %56, %16
-  br label %59
+78:                                               ; preds = %69
+  %79 = load i32, i32* %2, align 4
+  %80 = load i32, i32* %3, align 4
+  %81 = load i32, i32* %4, align 4
+  %82 = call i32 @mid(i32 noundef %79, i32 noundef %80, i32 noundef %81)
+  %83 = srem i32 %82, 65535
+  %84 = call i32 @factorial(i32 noundef %83)
+  %85 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i64 0, i64 0), i32 noundef %84)
+  br label %86
 
-59:                                               ; preds = %58, %0
+86:                                               ; preds = %78, %76
+  br label %87
+
+87:                                               ; preds = %86, %53
+  %88 = load i32, i32* %2, align 4
+  call void @noUse(i32 noundef %88)
   ret i32 0
 }
 
-declare i32 @getint(...) #1
-
 attributes #0 = { noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
 attributes #1 = { "frame-pointer"="all" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
-attributes #2 = { argmemonly nofree nounwind willreturn }
 
 !llvm.module.flags = !{!0, !1, !2, !3, !4}
 !llvm.ident = !{!5}

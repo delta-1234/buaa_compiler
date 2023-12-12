@@ -4,7 +4,8 @@ import llvm.Use;
 import llvm.type.Type;
 import llvm.value.BasicBlock;
 import llvm.value.Value;
-import llvm.value.constant.ConstInt;
+
+import java.util.HashMap;
 
 public class UnaryIns extends Instruction{
     private Value value;
@@ -38,5 +39,15 @@ public class UnaryIns extends Instruction{
     public void setValue(Value value) {
         this.value = value;
         Use.getInstance(value, this);
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        Value v = oldValueToNew.getOrDefault(value, value);
+        UnaryIns unaryIns = new UnaryIns("", getType(), father, getOp(), v);
+        oldValueToNew.put(this, unaryIns);
+        return unaryIns;
     }
 }

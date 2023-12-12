@@ -57,4 +57,12 @@ public class AllocaIns extends Instruction {
     public boolean isArg() {
         return isArg;
     }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew, HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        AllocaIns allocaIns = new AllocaIns("", getType(), father, getOp(), isConst);
+        oldValueToNew.put(this, allocaIns);
+        return allocaIns;
+    }
 }

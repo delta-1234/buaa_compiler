@@ -6,6 +6,8 @@ import llvm.value.BasicBlock;
 import llvm.value.User;
 import llvm.value.Value;
 
+import java.util.HashMap;
+
 public class StoreIns extends Instruction {
     private Value value;
     private User pointer;
@@ -46,5 +48,15 @@ public class StoreIns extends Instruction {
     public void setPointer(User pointer) {
         this.pointer = pointer;
         Use.getInstance(this, pointer);
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        Value v = oldValueToNew.getOrDefault(value, value);
+        Value p = oldValueToNew.getOrDefault(pointer, pointer);
+        StoreIns storeIns = new StoreIns("", getType(), father, getOp(), v, (User) p);
+        return storeIns;
     }
 }

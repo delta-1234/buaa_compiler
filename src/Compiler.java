@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
+import llvm.IRModule;
 import util.IRBuilder;
 import util.Parser;
 
@@ -32,10 +33,11 @@ public class Compiler {
                 errorFileWriter.close();
                 return;
             }
-            llvmPrintWriter.println(IRBuilder.module);
-            llvmPrintWriter.close();
+            IRBuilder.better();
             Mips mips = new Mips();
             mips.build();
+            llvmPrintWriter.println(IRBuilder.module);
+            llvmPrintWriter.close();
             mipsPrintWriter.println(mips);
             mipsFileWriter.close();
         } catch (Exception e) {

@@ -10,6 +10,7 @@ import llvm.value.constant.ConstInt;
 import llvm.value.constant.IRFunction;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CallIns extends Instruction {
     private IRFunction func;
@@ -68,5 +69,18 @@ public class CallIns extends Instruction {
         }
         sb.append(")\n");
         return sb.toString();
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        ArrayList<Value> params = new ArrayList<>();
+        for (int i = 0; i < realParams.size(); i++) {
+            params.add(oldValueToNew.getOrDefault(realParams.get(i), realParams.get(i)));
+        }
+        CallIns callIns = new CallIns("", getType(), father, getOp(), func, params);
+        oldValueToNew.put(this, callIns);
+        return callIns;
     }
 }

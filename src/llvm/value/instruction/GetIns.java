@@ -8,6 +8,7 @@ import llvm.value.Value;
 import llvm.value.constant.ConstInt;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GetIns extends Instruction{
     private Value value;
@@ -63,5 +64,19 @@ public class GetIns extends Instruction{
     public void setValue(Value value) {
         this.value = value;
         Use.getInstance(value, this);
+    }
+
+    @Override
+    public Instruction clone(HashMap<BasicBlock, BasicBlock> oldBBToNew,
+                             HashMap<Value, Value> oldValueToNew) {
+        BasicBlock father = oldBBToNew.get(getParent());
+        Value v = oldValueToNew.getOrDefault(value, value);
+        ArrayList<Value> temp = new ArrayList<>();
+        for (int i = 0; i < index.size(); i++) {
+            temp.add(oldValueToNew.getOrDefault(index.get(i), index.get(i)));
+        }
+        GetIns getIns = new GetIns("", getType(), father, getOp(), v, temp);
+        oldValueToNew.put(this, getIns);
+        return getIns;
     }
 }
