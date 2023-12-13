@@ -68,8 +68,4 @@ public class Mips {
         }
         return sb.toString();
     }
-
-    public int calFinalCycle() {
-        return 0;
-    }
 }

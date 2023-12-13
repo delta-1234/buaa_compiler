@@ -116,6 +116,12 @@ public class IRModule {
                 temp.add(functions.get(i));
             }
         }
+        int total = 0;
+        for (IRFunction func : temp) {
+            for (int i = 0; i < func.getBasicBlocks().size(); i++) {
+                total += func.getBasicBlocks().get(i).getInstructions().size();
+            }
+        }
         //不是所有函数展开都有利于缩减时间，规定小函数，同时调用次数少的函数才展开
         for (IRFunction func : temp) {
             int insCount = 0;
@@ -123,7 +129,7 @@ public class IRModule {
                 insCount += func.getBasicBlocks().get(i).getInstructions().size();
             }
             //总指令条数小于100条且引用次数小于10才展开
-            if (insCount < 50 && refCount.get(func.getName()) < 3) {
+            if ((insCount < 50 && refCount.get(func.getName()) < 3) || total > 2500) {
                 noneRecursive.add(func);
             }
         }
